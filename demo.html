@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Book a demo or get a sample report. See which companies are visiting your website.">
+    
+    <title>Book a Demo — Ruby</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header__inner">
+            <a href="index.html" class="header__logo">Ruby</a>
+            <nav class="header__nav">
+                <a href="use-cases.html" class="header__link">Use cases</a>
+                <a href="pricing.html" class="header__link">Pricing</a>
+                <a href="customers.html" class="header__link">Customers</a>
+                <a href="demo.html" class="header__link header__link--cta header__link--active">Book a demo</a>
+            </nav>
+            <button class="header__menu-btn" aria-label="Menu">☰</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Demo Section -->
+        <section class="demo section" id="sample">
+            <div class="demo__inner">
+                <div class="demo__content">
+                    <h1 class="headline-large demo__title">Get your account list sample.</h1>
+                    <p class="body-large demo__description">
+                        Tell us your website and we'll send you a sample of what Ruby would show for your traffic. No commitment, no credit card.
+                    </p>
+                    <ul class="demo__benefits">
+                        <li>→ See real companies visiting your site</li>
+                        <li>→ Understand their intent signals</li>
+                        <li>→ No code required for the sample</li>
+                    </ul>
+                </div>
+                <div class="demo__form-wrapper">
+                    <form class="demo__form" id="demo-form">
+                        <div class="form__group">
+                            <label for="email" class="form__label">Work email *</label>
+                            <input type="email" id="email" name="email" class="form__input" placeholder="you@company.com" required>
+                        </div>
+                        <div class="form__group">
+                            <label for="website" class="form__label">Company website *</label>
+                            <input type="url" id="website" name="website" class="form__input" placeholder="https://yourcompany.com" required>
+                        </div>
+                        <div class="form__group">
+                            <label for="crm" class="form__label">CRM</label>
+                            <select id="crm" name="crm" class="form__select">
+                                <option value="">Select your CRM</option>
+                                <option value="hubspot">HubSpot</option>
+                                <option value="salesforce">Salesforce</option>
+                                <option value="pipedrive">Pipedrive</option>
+                                <option value="other">Other</option>
+                                <option value="none">No CRM yet</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn--primary btn--large form__submit">Get my sample report</button>
+                        <p class="form__note">We'll send you a sample within 24 hours.</p>
+                    </form>
+                    
+                    <!-- Success Message (hidden by default) -->
+                    <div class="demo__success" id="demo-success" style="display: none;">
+                        <div class="success__icon">✓</div>
+                        <h3 class="success__title">Request received!</h3>
+                        <p class="success__message">We'll analyze your website traffic and send you a sample report within 24 hours. Check your inbox.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- What Happens Next -->
+        <section class="next-steps section section--light">
+            <div class="container--wide">
+                <div class="next-steps__header">
+                    <span class="label">What happens next</span>
+                    <h2 class="headline-small">Simple process</h2>
+                </div>
+                <div class="next-steps__grid">
+                    <div class="step-card">
+                        <div class="step-card__number">1</div>
+                        <h3 class="step-card__title">Submit your website</h3>
+                        <p class="step-card__description">Fill out the form above with your work email and company website.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-card__number">2</div>
+                        <h3 class="step-card__title">We analyze your traffic</h3>
+                        <p class="step-card__description">We'll look at publicly available data to show you what Ruby could identify.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-card__number">3</div>
+                        <h3 class="step-card__title">Get your sample</h3>
+                        <p class="step-card__description">Within 24 hours, you'll receive a sample report with real account data.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container--wide">
+            <div class="footer__simple">
+                <span class="footer__logo">Ruby</span>
+                <nav class="footer__links-inline">
+                    <a href="privacy.html" class="footer__link">Privacy</a>
+                    <a href="terms.html" class="footer__link">Terms</a>
+                    <a href="mailto:hello@getruby.io" class="footer__link">Contact</a>
+                </nav>
+            </div>
+            <div class="footer__bottom">
+                <p class="footer__copyright">© 2026 Ruby. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Form submission handler
+        document.getElementById('demo-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Hide form, show success
+            this.style.display = 'none';
+            document.getElementById('demo-success').style.display = 'block';
+            
+            // Here you would normally send the data to your backend
+            const formData = new FormData(this);
+            console.log('Form submitted:', Object.fromEntries(formData));
+        });
+    </script>
+</body>
+</html>
