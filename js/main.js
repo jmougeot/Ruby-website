@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollAnimations();
     initSmoothScroll();
     initHeaderScroll();
-    initCursorGlow();
 });
 
 /* ========================================
@@ -90,102 +89,17 @@ function initSmoothScroll() {
 
 function initHeaderScroll() {
     const header = document.querySelector('.header');
-    let lastScroll = 0;
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
         
         if (currentScroll > 100) {
-            header.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+            header.style.backgroundColor = 'rgba(255, 255, 255, 0.97)';
+            header.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.08)';
         } else {
-            header.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            header.style.backgroundColor = 'rgba(255, 255, 255, 0.85)';
+            header.style.boxShadow = 'none';
         }
-
-        lastScroll = currentScroll;
-    });
-}
-
-/* ========================================
-   Counter Animation for Stats
-   ======================================== */
-
-function animateCounters() {
-    const counters = document.querySelectorAll('.stat-item__value');
-    
-    counters.forEach(counter => {
-        const target = parseInt(counter.getAttribute('data-target'));
-        const duration = 2000;
-        const step = target / (duration / 16);
-        let current = 0;
-
-        const updateCounter = () => {
-            current += step;
-            if (current < target) {
-                counter.textContent = Math.floor(current).toLocaleString() + '+';
-                requestAnimationFrame(updateCounter);
-            } else {
-                counter.textContent = target.toLocaleString() + '+';
-            }
-        };
-
-        updateCounter();
-    });
-}
-
-// Trigger counter animation when stats section is visible
-const statsSection = document.querySelector('.stats');
-if (statsSection) {
-    const statsObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                animateCounters();
-                statsObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-
-    statsObserver.observe(statsSection);
-}
-
-/* ========================================
-   Cursor Glow Effect
-   ======================================== */
-
-function initCursorGlow() {
-    // Only on desktop
-    if (window.innerWidth < 1024) return;
-    
-    const glow = document.createElement('div');
-    glow.className = 'cursor-glow';
-    document.body.appendChild(glow);
-    
-    let mouseX = 0, mouseY = 0;
-    let glowX = 0, glowY = 0;
-    
-    document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-    });
-    
-    // Smooth follow
-    function animate() {
-        glowX += (mouseX - glowX) * 0.1;
-        glowY += (mouseY - glowY) * 0.1;
-        
-        glow.style.left = glowX + 'px';
-        glow.style.top = glowY + 'px';
-        
-        requestAnimationFrame(animate);
-    }
-    animate();
-    
-    // Hide on mouse leave
-    document.addEventListener('mouseleave', () => {
-        glow.style.opacity = '0';
-    });
-    
-    document.addEventListener('mouseenter', () => {
-        glow.style.opacity = '1';
     });
 }
 

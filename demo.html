@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Demandez une démo de Ruby. Découvrez comment analyser les appels de votre équipe commerciale et identifier ce qui fait la différence.">
     
+    <!-- Open Graph -->
+    <meta property="og:title" content="Demander une démo — Ruby">
+    <meta property="og:description" content="Découvrez ce que Ruby peut révéler dans les appels de votre équipe commerciale.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.rubysignal.com/demo.html">
+    <meta property="og:image" content="https://www.rubysignal.com/assets/images/logo.png">
+    <meta property="og:locale" content="fr_FR">
+    
     <title>Demander une démo — Ruby</title>
     
     <link rel="icon" type="image/png" href="assets/images/logo.png">
@@ -37,7 +45,7 @@
                     </p>
                 </div>
                 <div class="demo__form-wrapper">
-                    <form class="demo__form" id="demo-form">
+                    <form class="demo__form" id="demo-form" action="https://formspree.io/f/xplaceholder" method="POST">
                         <div class="form__group">
                             <label for="email" class="form__label">Email professionnel *</label>
                             <input type="email" id="email" name="email" class="form__input" placeholder="vous@entreprise.com" required>
@@ -68,6 +76,7 @@
                         </div>
                         <button type="submit" class="btn btn--primary btn--large form__submit">Demander une démo</button>
                         <p class="form__note">Nous vous recontactons sous 24h.</p>
+                        <p class="form__note"><a href="https://cal.com/ruby-signal/demo" target="_blank" rel="noopener noreferrer" class="form__calendar-link">Ou réservez directement un créneau →</a></p>
                     </form>
                     
                     <!-- Success Message (hidden by default) -->
