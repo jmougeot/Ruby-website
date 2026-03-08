@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Ruby turns anonymous website traffic into a daily list of target accounts to contact. See which companies visit your site and what they care about.">
-    <meta name="keywords" content="account identification, website visitors, B2B sales, intent data, lead generation">
+    <meta name="description" content="Ruby analyse l'ensemble des appels de votre équipe commerciale pour identifier les comportements qui font la différence et améliorer les performances grâce à un coaching personnalisé.">
+    <meta name="keywords" content="analyse appels commerciaux, coaching commercial, performance vente, conversation intelligence, sales coaching">
     
-    <title>Ruby — See which companies are on your website</title>
+    <title>Ruby — Comprenez pourquoi certains commerciaux vendent plus</title>
     
     <link rel="icon" type="image/png" href="assets/images/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -17,9 +20,8 @@
         <div class="header__inner">
             <a href="index.html" class="header__logo"><img src="assets/images/logo.png" alt="Ruby" class="header__logo-img"></a>
             <nav class="header__nav">
-                <a href="ai.html" class="header__link">AI</a>
-                <a href="pricing.html" class="header__link">Pricing</a>
-                <a href="demo.html" class="header__link header__link--cta">Book a demo</a>
+                <a href="#produit" class="header__link">Produit</a>
+                <a href="demo.html" class="header__link header__link--cta">Demander une démo</a>
             </nav>
             <button class="header__menu-btn" aria-label="Menu">☰</button>
         </div>
@@ -30,13 +32,13 @@
         <section class="hero">
             <div class="hero__content">
                 <h1 class="headline-large hero__title">
-                    See which companies are on your website.
+                    Vos appels commerciaux contiennent la réponse.
                 </h1>
                 <p class="body-large hero__subtitle">
-                    Ruby identifies the companies visiting your site — and what pages they viewed. Your sales team gets a daily list of warm accounts to contact.
+                    Ruby analyse tous les appels de votre équipe, identifie ce qui distingue les meilleurs vendeurs et génère du coaching personnalisé pour chacun.
                 </p>
                 <div class="btn-group hero__buttons">
-                    <a href="demo.html" class="btn btn--primary btn--large">Get a free sample report</a>
+                    <a href="demo.html" class="btn btn--primary btn--large">Demander une démo</a>
                 </div>
             </div>
             <div class="hero__image">
@@ -47,250 +49,159 @@
                         <span class="mockup__dot"></span>
                     </div>
                     <div class="mockup__content">
+                        <div class="mockup__section-label">Appels gagnants</div>
                         <div class="mockup__row mockup__row--hot">
-                            <span class="mockup__company">Acme Corp</span>
-                            <span class="mockup__pages">Pricing, Integrations</span>
-                            <span class="mockup__score">High intent</span>
-                        </div>
-                        <div class="mockup__row">
-                            <span class="mockup__company">TechStart Inc</span>
-                            <span class="mockup__pages">Docs, API</span>
-                            <span class="mockup__score">Medium intent</span>
-                        </div>
-                        <div class="mockup__row">
-                            <span class="mockup__company">GlobalSoft</span>
-                            <span class="mockup__pages">Case studies</span>
-                            <span class="mockup__score">Medium intent</span>
+                            <span class="mockup__company">Temps de parole commercial</span>
+                            <span class="mockup__score">42 %</span>
                         </div>
                         <div class="mockup__row mockup__row--hot">
-                            <span class="mockup__company">FastScale</span>
-                            <span class="mockup__pages">Pricing, Security</span>
-                            <span class="mockup__score">High intent</span>
+                            <span class="mockup__company">Questions ouvertes posées</span>
+                            <span class="mockup__score">8.2 / appel</span>
+                        </div>
+                        <div class="mockup__section-label mockup__section-label--lost">Appels perdus</div>
+                        <div class="mockup__row">
+                            <span class="mockup__company">Temps de parole commercial</span>
+                            <span class="mockup__score">68 %</span>
+                        </div>
+                        <div class="mockup__row">
+                            <span class="mockup__company">Questions ouvertes posées</span>
+                            <span class="mockup__score">2.1 / appel</span>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Social Proof -->
-        <section class="social-proof">
-            <div class="container--wide">
-                <p class="social-proof__text">B2B visitor identification — Powered by AI</p>
-            </div>
-        </section>
-
-        <!-- How it works -->
-        <section class="how-it-works section">
+        <!-- Comment ça marche -->
+        <section class="features section section--light" id="produit">
             <div class="container--wide">
                 <div class="features__header animate-on-scroll">
                     <div class="features__header-left">
-                        <span class="label">How it works</span>
-                        <h2 class="headline-medium">From anonymous traffic to actionable leads.</h2>
+                        <span class="label">Comment ça marche</span>
+                        <h2 class="headline-medium">Trois étapes. Zéro effort.</h2>
                     </div>
                 </div>
-                <div class="next-steps__grid">
+                <div class="next-steps__grid animate-on-scroll">
                     <div class="step-card">
                         <div class="step-card__number">1</div>
-                        <h3 class="step-card__title">Install one script</h3>
-                        <p class="step-card__description">Add a single line of code to your website. Takes 5 minutes, no engineering required.</p>
+                        <h3 class="step-card__title">Connectez vos appels</h3>
+                        <p class="step-card__description">Ruby s'intègre à votre téléphonie et analyse chaque conversation automatiquement.</p>
                     </div>
                     <div class="step-card">
                         <div class="step-card__number">2</div>
-                        <h3 class="step-card__title">Ruby identifies visitors</h3>
-                        <p class="step-card__description">We match IP addresses to company databases. You see company names and which pages they viewed.</p>
+                        <h3 class="step-card__title">Identifiez les patterns</h3>
+                        <p class="step-card__description">La plateforme compare appels gagnants et perdus pour révéler les comportements qui comptent.</p>
                     </div>
                     <div class="step-card">
                         <div class="step-card__number">3</div>
-                        <h3 class="step-card__title">Your reps reach out</h3>
-                        <p class="step-card__description">Hot accounts appear in Slack or your CRM daily. Your team contacts them while interest is fresh.</p>
+                        <h3 class="step-card__title">Coachez avec précision</h3>
+                        <p class="step-card__description">Chaque commercial reçoit des recommandations concrètes basées sur ses propres appels.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Use Cases -->
-        <section class="use-cases-section section section--light">
-            <div class="container--wide">
-                <div class="features__header animate-on-scroll">
-                    <div class="features__header-left">
-                        <span class="label">Use cases</span>
-                        <h2 class="headline-medium">Three ways sales teams use Ruby.</h2>
-                    </div>
-                </div>
-
-                <div class="features__grid features__grid--3">
-                    <article class="feature-card animate-on-scroll">
-                        <div class="feature-card__icon">— 01</div>
-                        <h3 class="feature-card__title">Turn anonymous traffic into pipeline</h3>
-                        <p class="feature-card__description">
-                            Most visitors never fill a form. Ruby reveals which target accounts are browsing your site — so you can follow up while interest is fresh.
-                        </p>
-                    </article>
-
-                    <article class="feature-card animate-on-scroll">
-                        <div class="feature-card__icon">— 02</div>
-                        <h3 class="feature-card__title">Time your outbound perfectly</h3>
-                        <p class="feature-card__description">
-                            Your account list is static, but interest isn't. Ruby tells you when a target account starts researching — the perfect moment to reach out.
-                        </p>
-                    </article>
-
-                    <article class="feature-card animate-on-scroll">
-                        <div class="feature-card__icon">— 03</div>
-                        <h3 class="feature-card__title">Prove your campaigns work</h3>
-                        <p class="feature-card__description">
-                            See which accounts came back after a campaign, which pages they viewed, and how activity changed week-over-week. Real attribution.
-                        </p>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <!-- What you get -->
+        <!-- Fonctionnalités -->
         <section class="features section">
             <div class="container--wide">
                 <div class="features__header animate-on-scroll">
                     <div class="features__header-left">
-                        <span class="label features__label">What you get</span>
-                        <h2 class="headline-medium features__title">
-                            Everything a rep needs.
-                        </h2>
+                        <span class="label features__label">Fonctionnalités</span>
+                        <h2 class="headline-medium features__title">L'essentiel pour votre équipe.</h2>
                     </div>
                 </div>
 
                 <div class="features__grid features__grid--4">
-                    <article class="feature-card animate-on-scroll">
-                        <div class="feature-card__icon">→</div>
-                        <h3 class="feature-card__title">Company feed</h3>
+                    <article class="feature-card feature-card--ai animate-on-scroll">
+                        <div class="feature-card__icon">— 01</div>
+                        <h3 class="feature-card__title">Analyse à grande échelle</h3>
                         <p class="feature-card__description">
-                            A live list of companies visiting your site, ranked by intent. Updated daily.
+                            Des centaines d'appels analysés automatiquement. Plus d'échantillonnage aléatoire.
                         </p>
+                        <div class="feature-card__example">
+                            <span class="example-label">Exemple</span>
+                            <span class="example-text">427 appels ce mois → 3 patterns gagnants identifiés</span>
+                        </div>
                     </article>
 
-                    <article class="feature-card animate-on-scroll">
-                        <div class="feature-card__icon">→</div>
-                        <h3 class="feature-card__title">Account timeline</h3>
+                    <article class="feature-card feature-card--ai animate-on-scroll">
+                        <div class="feature-card__icon">— 02</div>
+                        <h3 class="feature-card__title">Comparaison gagnants / perdus</h3>
                         <p class="feature-card__description">
-                            First seen, last seen, pages touched, frequency. Full context at a glance.
+                            Ce qui distingue concrètement les appels qui convertissent de ceux qui échouent.
                         </p>
+                        <div class="feature-card__example">
+                            <span class="example-label">Insight</span>
+                            <span class="example-text">Les gagnants posent 3x plus de questions ouvertes dans les 5 premières minutes</span>
+                        </div>
                     </article>
 
-                    <article class="feature-card animate-on-scroll">
-                        <div class="feature-card__icon">→</div>
-                        <h3 class="feature-card__title">AI intent scoring</h3>
+                    <article class="feature-card feature-card--ai animate-on-scroll">
+                        <div class="feature-card__icon">— 03</div>
+                        <h3 class="feature-card__title">Coaching personnalisé</h3>
                         <p class="feature-card__description">
-                            Pricing, docs, integrations, security pages — all weighted by buying intent automatically.
+                            Des recommandations spécifiques pour chaque vendeur, basées sur ses propres appels.
                         </p>
+                        <div class="feature-card__example">
+                            <span class="example-label">Recommandation</span>
+                            <span class="example-text">"Réduisez votre temps de parole de 65 % à 45 %"</span>
+                        </div>
                     </article>
 
-                    <article class="feature-card animate-on-scroll">
-                        <div class="feature-card__icon">→</div>
-                        <h3 class="feature-card__title">Slack & CRM routing</h3>
+                    <article class="feature-card feature-card--ai animate-on-scroll">
+                        <div class="feature-card__icon">— 04</div>
+                        <h3 class="feature-card__title">Dashboard équipe</h3>
                         <p class="feature-card__description">
-                            Hot accounts sent to Slack or your CRM as a daily digest. Never miss a signal.
+                            Tendances, progressions, comparaisons entre commerciaux. Tout en un coup d'œil.
                         </p>
+                        <div class="feature-card__example">
+                            <span class="example-label">Vue</span>
+                            <span class="example-text">Conversion : 23 % → 31 % en 8 semaines</span>
+                        </div>
                     </article>
                 </div>
             </div>
         </section>
 
-        <!-- Testimonials -->
+        <!-- Impact -->
         <section class="testimonials section section--dark">
             <div class="container--wide">
                 <div class="features__header animate-on-scroll">
                     <div class="features__header-left">
-                        <span class="label" style="color: #e31c3d;">What teams say</span>
-                        <h2 class="headline-medium" style="color: #fff;">Results in the first week.</h2>
+                        <span class="label" style="color: #e31c3d;">Impact</span>
+                        <h2 class="headline-medium" style="color: #fff;">Des résultats mesurables.</h2>
                     </div>
                 </div>
-
-                <div class="quotes__grid">
-                    <blockquote class="quote-card">
-                        <p class="quote-card__text">"We finally know which accounts are researching us. Game changer for our outbound."</p>
-                        <footer class="quote-card__author">
-                            <span class="quote-card__name">Sales Lead</span>
-                            <span class="quote-card__company">B2B SaaS, 50 employees</span>
-                        </footer>
-                    </blockquote>
-                    <blockquote class="quote-card">
-                        <p class="quote-card__text">"Our reps open Ruby every morning — it's their call list."</p>
-                        <footer class="quote-card__author">
-                            <span class="quote-card__name">RevOps Manager</span>
-                            <span class="quote-card__company">Tech startup, Series A</span>
-                        </footer>
-                    </blockquote>
-                    <blockquote class="quote-card">
-                        <p class="quote-card__text">"Setup took 10 minutes. First insight came the same day."</p>
-                        <footer class="quote-card__author">
-                            <span class="quote-card__name">Founder</span>
-                            <span class="quote-card__company">Agency, 15 employees</span>
-                        </footer>
-                    </blockquote>
-                </div>
-
-                <!-- Stats -->
                 <div class="stats__grid stats__grid--inline">
                     <div class="stat-item stat-item--dark">
-                        <div class="stat-item__value">5 min</div>
-                        <div class="stat-item__label">Setup time</div>
+                        <div class="stat-item__value">+25 %</div>
+                        <div class="stat-item__label">Taux de conversion</div>
                     </div>
                     <div class="stat-item stat-item--dark">
-                        <div class="stat-item__value">Day 1</div>
-                        <div class="stat-item__label">First insights</div>
+                        <div class="stat-item__value">100 %</div>
+                        <div class="stat-item__label">Appels analysés</div>
                     </div>
                     <div class="stat-item stat-item--dark">
-                        <div class="stat-item__value">Daily</div>
-                        <div class="stat-item__label">Account updates</div>
+                        <div class="stat-item__value">2x</div>
+                        <div class="stat-item__label">Onboarding plus rapide</div>
                     </div>
                     <div class="stat-item stat-item--dark">
-                        <div class="stat-item__value">0</div>
-                        <div class="stat-item__label">Engineering needed</div>
+                        <div class="stat-item__value">−70 %</div>
+                        <div class="stat-item__label">Temps d'écoute managers</div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- AI Teaser -->
-        <section class="ai-teaser section">
-            <div class="container--wide">
-                <div class="ai-teaser__inner animate-on-scroll">
-                    <div class="ai-teaser__content">
-                        <span class="label">Powered by AI</span>
-                        <h2 class="headline-medium">Not just data. Decisions.</h2>
-                        <p class="body-large">Ruby's AI doesn't just list visitors — it scores intent, generates summaries, and recommends next actions. Less analysis, more selling.</p>
-                        <a href="ai.html" class="btn btn--secondary">Learn about our AI →</a>
-                    </div>
-                    <div class="ai-teaser__highlights">
-                        <div class="ai-highlight">
-                            <span class="ai-highlight__title">Intent Scoring</span>
-                            <span class="ai-highlight__desc">AI predicts who's ready to buy</span>
-                        </div>
-                        <div class="ai-highlight">
-                            <span class="ai-highlight__title">Smart Summaries</span>
-                            <span class="ai-highlight__desc">Readable insights, not raw data</span>
-                        </div>
-                        <div class="ai-highlight">
-                            <span class="ai-highlight__title">Next Actions</span>
-                            <span class="ai-highlight__desc">Call, email, or nurture — AI decides</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA Section -->
+        <!-- CTA -->
         <section class="cta section">
             <div class="cta__content">
                 <h2 class="headline-medium cta__title">
-                    See who's on your website right now.
+                    Prêt à voir ce qui se passe vraiment dans vos appels ?
                 </h2>
-                <p class="body-large cta__description">
-                    Get a free sample report — we'll show you which companies visited your site this week.
-                </p>
                 <div class="btn-group">
-                    <a href="demo.html" class="btn btn--primary btn--large">Get my sample report</a>
+                    <a href="demo.html" class="btn btn--primary btn--large">Demander une démo</a>
                 </div>
-                <p class="cta__note">No commitment. No credit card. Just insights.</p>
             </div>
         </section>
     </main>
@@ -301,13 +212,13 @@
             <div class="footer__simple">
                 <span class="footer__logo"><img src="assets/images/logo.png" alt="Ruby" class="footer__logo-img"></span>
                 <nav class="footer__links-inline">
-                    <a href="privacy.html" class="footer__link">Privacy</a>
-                    <a href="terms.html" class="footer__link">Terms</a>
+                    <a href="privacy.html" class="footer__link">Confidentialité</a>
+                    <a href="terms.html" class="footer__link">CGU</a>
                     <a href="mailto:hello@getruby.io" class="footer__link">Contact</a>
                 </nav>
             </div>
             <div class="footer__bottom">
-                <p class="footer__copyright">© 2026 Ruby. All rights reserved.</p>
+                <p class="footer__copyright">© 2026 Ruby. Tous droits réservés.</p>
             </div>
         </div>
     </footer>
