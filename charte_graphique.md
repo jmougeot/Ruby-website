@@ -202,17 +202,7 @@ Pas d’icônes trop arrondies.
 
 ---
 
-# 11. NAVIGATION
 
-Header :
-
-- Fond blanc
-- Hauteur 72–80px
-- Logo à gauche
-- Navigation centrée ou droite
-- CTA primaire à droite
-
-Sticky header autorisé.
 
 ---
 
