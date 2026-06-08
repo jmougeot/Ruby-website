@@ -2,7 +2,7 @@
 title: "Le ROI du coaching commercial : l'investissement que trop d'équipes négligent"
 date: 2026-06-08
 author: "L'équipe Ruby"
-category: "IA et coaching"
+category: "Coaching"
 excerpt: "Le coaching est souvent vu comme un coût « soft », difficile à justifier. Les chiffres disent l'inverse : c'est l'un des leviers les plus rentables d'une équipe de vente. Démonstration, calcul du ROI à l'appui."
 image: /assets/blog/roi-coaching.svg
 ---
@@ -55,7 +55,3 @@ La conclusion est nette : le coaching efficace n'est pas un événement, c'est u
 C'est précisément là que la plupart des équipes calent : un bon coaching prend du temps. Écouter les appels, repérer les moments clés, formuler un retour utile pour chaque commercial… c'est rarement tenable manuellement à l'échelle d'une équipe.
 
 C'est le rôle de Ruby : analyser **100 % des appels**, faire remonter automatiquement les moments qui comptent et générer un coaching personnalisé pour chaque vendeur. Le coaching cesse d'être un luxe ponctuel pour devenir une routine mesurable — celle qui, justement, produit ce ROI.
-
----
-
-*Sources : [La Chouette Monnaie — Calculer le ROI du coaching commercial](https://lachouettemonnaie.fr/calculer-roi-coaching-commercial/) · [MuchBetter.ai — Sales training ROI: 12 metrics that prove impact](https://muchbetter.ai/blog/sales-training-roi-12-metrics-that-prove-impact).*

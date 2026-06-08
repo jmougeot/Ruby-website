@@ -32,18 +32,9 @@ description: "Méthodes, analyses terrain et retours d'expérience pour les équ
     </section>
     {% endif %}
 
-    <!-- Citation -->
-    <section class="container--wide">
-        <figure class="pull-citation">
-            <blockquote>« Près d'une affaire perdue sur deux ne va pas à un concurrent : elle se solde par une non-décision. »</blockquote>
-            <figcaption>The Jolt Effect — Matthew Dixon &amp; Ted McKenna</figcaption>
-        </figure>
-    </section>
-
     <!-- Les autres articles, en longueur -->
     {% if rest.length %}
     <section class="container--wide journal-grid-section">
-        <div class="section-head"><h2 class="section-head__title">À lire aussi</h2></div>
         <div class="une-list">
             {% for post in rest %}
             <a class="une-row" href="{{ post.url }}">

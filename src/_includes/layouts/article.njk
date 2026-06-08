@@ -47,7 +47,6 @@ ogType: article
     {% if related.length %}
     <section class="related section section--light">
         <div class="container--wide">
-            <div class="section-head"><h2 class="section-head__title">À lire aussi</h2></div>
             <div class="post-grid post-grid--3">
                 {% for post in related %}{% include "partials/post-card.njk" %}{% endfor %}
             </div>
