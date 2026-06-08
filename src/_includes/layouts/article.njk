@@ -1,0 +1,84 @@
+---
+layout: layouts/base.njk
+ogType: article
+---
+{% set minutes = content | readingTime %}
+<article class="article">
+    <div class="article__container">
+        <nav class="article__breadcrumb">
+            <a href="/blog/">Journal</a>
+            {% if category %}<span class="article__dot">·</span><span>{{ category }}</span>{% endif %}
+        </nav>
+
+        <header class="article__header">
+            {% if category %}<span class="label article__kicker">{{ category }}</span>{% endif %}
+            <h1 class="headline-large article__title">{{ title }}</h1>
+            {% if excerpt %}<p class="article__standfirst">{{ excerpt }}</p>{% endif %}
+            <div class="article__meta">
+                <span class="article__author-name">{{ author or site.author }}</span>
+                <span class="article__dot">·</span>
+                <time datetime="{{ date | dateIso }}">{{ date | dateFr }}</time>
+                <span class="article__dot">·</span>
+                <span>{{ minutes }} min de lecture</span>
+            </div>
+        </header>
+
+        {% if image %}
+        <figure class="article__hero">
+            <img src="{{ image }}" alt="{{ title }}">
+        </figure>
+        {% endif %}
+
+        <div class="article__body legal__content">
+            {{ content | safe }}
+        </div>
+
+        <aside class="article__author-box">
+            <div class="article__author-avatar">{{ (author or site.author) | first }}</div>
+            <div>
+                <span class="article__author-label">Écrit par</span>
+                <strong class="article__author-fullname">{{ author or site.author }}</strong>
+                <p class="article__author-bio">Ruby analyse 100 % des appels commerciaux pour révéler ce qui fait vendre. Nos analyses terrain sur la vente, ici même.</p>
+            </div>
+        </aside>
+    </div>
+
+    {% set related = collections.posts | excludeUrl(page.url) | limit(3) %}
+    {% if related.length %}
+    <section class="related section section--light">
+        <div class="container--wide">
+            <div class="section-head"><h2 class="section-head__title">À lire aussi</h2></div>
+            <div class="post-grid post-grid--3">
+                {% for post in related %}{% include "partials/post-card.njk" %}{% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="cta cta--light section">
+        <div class="cta__content">
+            <h2 class="headline-medium cta__title">Envie de voir Ruby sur vos propres appels ?</h2>
+            <div class="btn-group">
+                <a href="/demo.html" class="btn btn--primary btn--large">Demander une démo</a>
+            </div>
+        </div>
+    </section>
+</article>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": {{ title | dump | safe }},
+    "description": {{ (excerpt or site.tagline) | dump | safe }},
+    "datePublished": "{{ date | dateIso }}",
+    "author": { "@type": "Person", "name": {{ (author or site.author) | dump | safe }} },
+    "publisher": {
+        "@type": "Organization",
+        "name": "Ruby",
+        "logo": { "@type": "ImageObject", "url": "{{ '/assets/images/logo.png' | absoluteUrl(site.url) }}" }
+    },
+    "mainEntityOfPage": "{{ page.url | absoluteUrl(site.url) }}"{% if image %},
+    "image": "{{ image | absoluteUrl(site.url) }}"{% endif %}
+}
+</script>

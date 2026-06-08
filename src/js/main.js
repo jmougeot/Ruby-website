@@ -89,6 +89,7 @@ function initSmoothScroll() {
 
 function initHeaderScroll() {
     const header = document.querySelector('.header');
+    if (!header) return;
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
