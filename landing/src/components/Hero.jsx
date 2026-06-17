@@ -1,11 +1,52 @@
+import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 
+const CaveScene = lazy(() => import('./CaveScene'))
 const ease = [0.22, 1, 0.36, 1]
+
+/** Si la 3D plante (WebGL absent, etc.), on retombe sur l'image. */
+class Safe3D extends Component {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
 
 export default function Hero() {
   const reduce = useReducedMotion()
-  const y = reduce ? 0 : 18
+  const [use3D, setUse3D] = useState(false)
+  const [inView, setInView] = useState(true)
+  const [docVisible, setDocVisible] = useState(true)
+  const sectionRef = useRef(null)
 
+  useEffect(() => {
+    if (reduce) return
+    const mobile = window.matchMedia('(max-width: 768px)').matches
+    if (!mobile) setUse3D(true)
+  }, [reduce])
+
+  // fige le rendu 3D dès que le hero sort de l'écran (gros gain de perf)
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(([e]) => setInView(e.isIntersecting), {
+      threshold: 0.01,
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  // fige aussi le rendu quand l'onglet n'est pas visible
+  useEffect(() => {
+    const onVis = () => setDocVisible(!document.hidden)
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [])
+
+  const y = reduce ? 0 : 18
   const container = {
     hidden: {},
     show: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } },
@@ -16,15 +57,25 @@ export default function Hero() {
   }
 
   return (
-    <section className="relative h-svh min-h-[36rem] w-full overflow-hidden">
-      {/* image de marque plein écran — la grotte et son signal rouge.
-          léger Ken Burns, désactivé en reduced-motion */}
+    <section ref={sectionRef} className="relative h-svh min-h-[36rem] w-full overflow-hidden">
+      {/* image = base + repli (mobile / reduced-motion / pendant le chargement 3D) */}
       <img
         src="/hero-cave.jpg"
         alt=""
         aria-hidden="true"
         className={`absolute inset-0 h-full w-full object-cover ${reduce ? '' : 'kenburns'}`}
       />
+
+      {/* grotte 3D par-dessus, sur desktop capable */}
+      {use3D && (
+        <Safe3D>
+          <Suspense fallback={null}>
+            <div className="absolute inset-0">
+              <CaveScene active={inView && docVisible} />
+            </div>
+          </Suspense>
+        </Safe3D>
+      )}
 
       {/* voile : sombre en haut (lisibilité header) + sombre en bas (texte),
           transparent au centre pour laisser briller le rubis */}
