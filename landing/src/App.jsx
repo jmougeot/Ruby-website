@@ -1,7 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import Header from './components/Header'
 import Hero from './components/Hero'
-import DemoShowcase from './components/DemoShowcase'
 import SectionPlaceholder from './components/SectionPlaceholder'
 import Footer from './components/Footer'
 import { sections } from './data/sections'
@@ -20,7 +19,6 @@ export default function App() {
       <Header />
       <main>
         <Hero />
-        <DemoShowcase />
 
         {sections.map((s) => (
           <SectionPlaceholder key={s.id} {...s} />
