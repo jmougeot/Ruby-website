@@ -1,260 +1,142 @@
-# CHARTE GRAPHIQUE — RUBY
+# Ruby — Charte Graphique v2
 
-## 1. Objectif
-
-Créer une identité visuelle sobre, fonctionnelle et hautement lisible.  
-Priorité : efficacité, clarté, hiérarchie visuelle nette.  
-Éviter tout style trop arrondi, trop rigide ou visuellement agressif.
+> Document maître de la direction artistique.
+> Les 4 autres docs (`design.md`, `motion.md`, `content.md`, `structure.md`) en découlent.
 
 ---
 
-# 2. PRINCIPES DIRECTEURS
+## Décisions actées
 
-- Structure avant esthétique
-- Lisibilité avant originalité
-- Contraste maîtrisé
-- Cohérence systémique
-- Minimalisme contrôlé
-
----
-
-# 3. SYSTÈME DE COULEURS
-
-## Couleur primaire (Accent)
-
-Ruby Red  
-HEX: #9B111E  
-Usage :
-- Boutons primaires
-- Liens actifs
-- États importants
-- Éléments d’attention
-
-⚠️ Ne pas utiliser en fond massif.
+| Sujet | Décision |
+|---|---|
+| CTA primaire | **Book a demo** (unique — pas de waitlist) |
+| Langue du site | **Anglais** (les briefs restent en français) |
+| Vidéo démo | **En production.** Placeholder propre en attendant (cf. `structure.md`) |
+| Stack cible | **React + Tailwind + Framer Motion / GSAP** (cf. `motion.md`) |
 
 ---
 
-## Couleurs neutres
+## Principe fondateur
 
-Noir principal (texte fort)  
-HEX: #1A1A1A  
+> **Toute abstraction doit retomber sur du concret.**
 
-Gris secondaire (texte secondaire)  
-HEX: #6B6B6B  
+C'est la règle qui résout la tension du projet. La lumière, le motion, le récit en 4 actes sont l'**enrobage**. Mais chaque moment abstrait doit *atterrir* sur une preuve réelle : un vrai bout d'interface, un vrai chiffre, une vraie phrase d'appel.
 
-Fond principal  
-HEX: #F5F5F3  
+```
+lumière abstraite  →  PAYOFF concret
+```
 
-Blanc pur  
-HEX: #FFFFFF  
+C'est ce que font Apple et Linear : l'ambiance se résout toujours sur un écran produit net. Une DA qui ne retombe jamais sur du réel est jolie et ne vend pas.
 
 ---
 
-## Règles d’usage
+## Positionnement
 
-- Rouge utilisé uniquement comme accent.
-- Fond majoritairement blanc ou gris très clair.
-- Contraste minimum WCAG AA.
-- Aucun dégradé décoratif.
+Ruby n'est pas un logiciel. Ruby est une **présence** — l'intelligence qui révèle ce qui était invisible.
 
----
+Le site doit donner la sensation de :
 
-# 4. TYPOGRAPHIE
+> voir davantage, comprendre davantage, devenir meilleur.
 
-## Police principale
-
-Inter (ou équivalent : Satoshi, IBM Plex Sans)
-
-Fallback:
-
-font-family: ‘Inter’, -apple-system, BlinkMacSystemFont, ‘Segoe UI’, Roboto, sans-serif;
+Et le visiteur, lui, reste **le héros**. Ruby est l'allié, pas la vedette.
 
 ---
 
-## Hiérarchie
+## Univers visuel
 
-H1  
-- 40–48px  
-- SemiBold ou Bold  
-- Letter-spacing léger (+0.5%)
+**Mots-clés** — Premium · Futuriste · Intelligent · Élégant · Minimaliste · Ambitieux · Humain
 
-H2  
-- 28–32px  
-- SemiBold  
+**Mots interdits (en DA)** — Corporate · Cyberpunk · Gaming · Néon · « startup IA générique »
 
-H3  
-- 20–24px  
-- Medium  
-
-Body  
-- 16–18px  
-- Regular  
-- Line-height: 1.6 minimum  
-
-Small text  
-- 14px minimum  
-
-⚠️ Jamais de texte < 14px.
+> ⚠️ Nuance : *CRM / Dashboard / Analytics* sont interdits **comme esthétique**, mais ce sont les mots que tes acheteurs tapent sur Google. On les garde dans le SEO et le `<head>` — on les bannit seulement du visuel.
 
 ---
 
-# 5. SYSTÈME DE FORMES
+## Narratif visuel — les 4 états
 
-## Philosophie
+Le visiteur traverse un arc émotionnel continu (un seul univers, pas 4 pages) :
 
-Rectangle adouci contrôlé.  
-Ni totalement carré.  
-Ni totalement arrondi.
+```
+1. Incertitude  →  2. Révélation  →  3. Clarté  →  4. Maîtrise
+```
 
----
-
-## Rayons de bordure
-
-Standard radius: 8px  
-Petits éléments: 6px  
-Grandes sections: 10px max  
-
-⚠️ Interdit :
-- Boutons pill (full rounded)
-- Angles 0px partout
-- Rayons > 12px
+| État | Section | Émotion | Couleur dominante |
+|---|---|---|---|
+| Incertitude | Hero | « il y a tant de signaux autour de moi » | Sombre + rouge ténu |
+| Révélation | *Ruby finds what you're missing* | « ah, c'est **ça** qu'il fallait voir » | Ruby Red |
+| Clarté | *The right signal, at the right moment* | « je sais quoi faire » | Rouge + blanc |
+| Maîtrise | *Until great calls become second nature* | sérénité, contrôle | Blanc (rouge intégré au paysage) |
 
 ---
 
-# 6. BOUTONS
+## Palette
 
-## Bouton primaire
+| Rôle | Valeur | Usage |
+|---|---|---|
+| Background principal | `#0B0B0D` | Fond du site |
+| Background secondaire | `#131316` | Sections intermédiaires |
+| Surface produit | `#F8F8F6` | Quand une vraie UI apparaît (contraste fort = clarté) |
+| Blanc principal | `#FAFAF7` | Texte |
+| Gris secondaire | `#8A8A92` | Texte secondaire |
+| **Ruby Red** | `#FF4D5A` | Le signal. Jamais massif. |
+| Ruby Glow | `rgba(255,77,90,0.35)` | Halos, le fil rouge |
 
-- Background: #9B111E
-- Texte: #FFFFFF
-- Border-radius: 8px
-- Padding: 12px 20px
-- Font-weight: 600
-- Transition hover: 150ms ease
+> **On réduit le langage de lumière à 2 teintes** (au lieu de 4) : le **rouge** (le signal) et le **blanc** (la révélation/clarté). On supprime la « lumière chaude » `#FFF4E6` — un de moins, plus lisible.
 
-Hover:
-- Background: #7F0E18
+### Loi du rouge
 
----
-
-## Bouton secondaire
-
-- Background: transparent
-- Border: 1px solid #1A1A1A
-- Texte: #1A1A1A
-- Border-radius: 8px
-
-Hover:
-- Background: #F0F0EE
+Le rouge Ruby représente **toujours** : un insight · une découverte · un signal · une opportunité · une intervention de Ruby.
+Le rouge ne représente **jamais** : un danger · une erreur · une alerte.
 
 ---
 
-# 7. CARTES & BLOCS
+## Typographie
 
-Card standard:
-
-- Background: #FFFFFF
-- Border: 1px solid #E5E5E5
-- Border-radius: 8px
-- Padding: 24px
-- Box-shadow: none ou très léger (0 2px 6px rgba(0,0,0,0.04))
-
-⚠️ Pas d’ombres lourdes.
+- **Font principale : Geist** (alternative : Inter).
+- **Hero** : 64–96 px desktop, poids 500–600.
+- **Sous-titres** : 18–22 px, très peu de texte.
+- **Règle** : le texte est un élément graphique, pas seulement du contenu — mais il doit quand même être **écrit** (cf. `content.md`).
 
 ---
 
-# 8. GRILLE & LAYOUT
+## Layout
 
-## Grille
-
-- 12 colonnes desktop
-- Gutter: 24px
-- Max width container: 1200px
-
-## Spacing system
-
-Utiliser une base 8px :
-
-8 / 16 / 24 / 32 / 48 / 64
-
-Aucun spacing arbitraire.
+- Max-width **1400 px**, très aéré.
+- Beaucoup de vide — bien plus que la moyenne des SaaS.
+- Peu de cartes, peu de bordures, peu de composants.
 
 ---
 
-# 9. ICONOGRAPHIE
+## Le produit, quand il apparaît
 
-- Style linéaire
-- Traits fins (1.5px ou 2px)
-- Couleur principale: #1A1A1A
-- Taille cohérente (24px standard)
-
-Pas d’icônes cartoon.  
-Pas d’icônes trop arrondies.
+- Fond quasi-blanc `#F8F8F6`, **fort contraste** avec le site sombre → le produit *est* la clarté.
+- Sensation visée : **un outil de précision**, pas un dashboard de management.
+- Il apparaît à chaque section comme **payoff concret** de l'abstraction (cf. Principe fondateur).
 
 ---
 
-# 10. IMAGES
+## Preuve & confiance
 
-- Fond neutre
-- Lumière naturelle ou contraste maîtrisé
-- Pas d’images génériques artificielles
-- Pas de saturation excessive
+Une page premium n'est pas une page sans preuve. On garde, rendus dans le langage de lumière :
 
----
-
-
+- **2–3 chiffres** clés (à remplir avec des données réelles — placeholders pour l'instant).
+- **1 verbatim** client court.
+- Une ligne d'**intégrations** (« Works with Zoom · Meet · Teams · Gong · Modjo »).
 
 ---
 
-# 12. FOOTER
+## Accessibilité & mobile (non négociable)
 
-- Fond #1A1A1A
-- Texte blanc cassé
-- Structure en colonnes
-- Espacement généreux
-
----
-
-# 13. MICRO-INTERACTIONS
-
-- Transitions 150–200ms
-- Ease standard
-- Aucun effet rebond ou animation excessive
-- Pas d’animation décorative
+- `prefers-reduced-motion` : version statique (gradients fixes, zéro canvas).
+- **Mobile = version simplifiée** : on coupe le canvas lourd, on garde l'ambiance via des dégradés CSS. Le hero doit être fluide sur iPhone avant d'être beau sur 5K.
+- Contraste texte AA minimum sur fond sombre.
 
 ---
 
-# 14. TONALITÉ VISUELLE GLOBALE
+## Règle absolue
 
-Le produit doit évoquer :
+Chaque élément du site répond à une seule question :
 
-- Précision
-- Stabilité
-- Maîtrise
-- Clarté
+> **Est-ce que cela renforce l'idée que Ruby permet de voir ce qui était invisible ?**
 
-Éviter toute esthétique :
-
-- Startup ludique
-- Ultra corporate froid
-- Minimalisme brutaliste
-- Design flashy
-
----
-
-# 15. CHECKLIST VALIDATION
-
-Avant mise en production vérifier :
-
-- Lisibilité optimale
-- Contraste suffisant
-- Cohérence des rayons
-- Cohérence des espacements
-- Rouge utilisé uniquement en accent
-- Pas d’effet décoratif inutile
-
----
-
-Fin de document.
-
-Si tu veux, je peux maintenant te faire la structure complète d’une homepage optimisée conversion en respectant exactement cette charte.
+Si non, l'élément n'a pas sa place.
