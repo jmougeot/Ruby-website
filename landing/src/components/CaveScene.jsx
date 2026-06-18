@@ -138,7 +138,7 @@ export default function CaveScene({ active = true, scroll }) {
         <DemoScreens curve={curve} uRef={uRef} breakRef={breakRef} />
       </Suspense>
       <CaveMessage curve={curve} uRef={uRef} exitRef={exitRef} />
-      <ExitMessage curve={curve} exitRef={exitRef} />
+      <ExitMessage exitRef={exitRef} />
       <MountainMessage curve={curve} exitRef={exitRef} />
       <EndLight curve={curve} uRef={uRef} />
       <RubyRig curve={curve} uRef={uRef} exitRef={exitRef} />

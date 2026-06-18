@@ -1,8 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Instances, Instance } from '@react-three/drei'
 import * as THREE from 'three'
-import { TUBE_R, WATER_Y, U_SCREENS, U_END, HOLE_HALF_U, HOLE_UP, frameAt } from './config'
+import { TUBE_R, WATER_Y, U_SCREENS, U_END, HOLE_HALF_U, HOLE_UP } from './config'
 import { makeNormalTex } from './textures'
 
 /** Parois rocheuses : grandes formes + grain fin (normal map) + AO dans les
@@ -87,87 +86,6 @@ export function TunnelWalls({ curve, noise, rockNormal, rockRough }) {
         side={THREE.BackSide}
       />
     </mesh>
-  )
-}
-
-/** Géométrie de bloc rocheux : icosaèdre déformé par bruit (relief en silhouette). */
-function useRockChunk(noise) {
-  return useMemo(() => {
-    const g = new THREE.IcosahedronGeometry(1, 2)
-    const pos = g.attributes.position
-    const v = new THREE.Vector3()
-    for (let i = 0; i < pos.count; i++) {
-      v.fromBufferAttribute(pos, i)
-      const dir = v.clone().normalize()
-      let d = 0
-      let amp = 1
-      let f = 1.6
-      for (let o = 0; o < 4; o++) {
-        d += amp * noise(dir.x * f, dir.y * f, dir.z * f)
-        amp *= 0.5
-        f *= 2.1
-      }
-      v.addScaledVector(dir, d * 0.4)
-      pos.setXYZ(i, v.x, v.y, v.z)
-    }
-    g.computeVertexNormals()
-    return g
-  }, [noise])
-}
-
-/** Cristaux + grands blocs rocheux (texturés), au-dessus de l'eau. */
-export function WallFeatures({ curve, noise, rockNormal }) {
-  const chunk = useRockChunk(noise)
-  const rockNormalChunks = useMemo(() => {
-    const t = rockNormal.clone()
-    t.repeat.set(2, 2)
-    t.needsUpdate = true
-    return t
-  }, [rockNormal])
-
-  const rocks = useMemo(() => {
-    const upperRadial = (u) => {
-      const { normal, binormal } = frameAt(curve, u)
-      let radial
-      for (let k = 0; k < 8; k++) {
-        const ang = Math.random() * Math.PI * 2
-        radial = normal
-          .clone()
-          .multiplyScalar(Math.cos(ang))
-          .add(binormal.clone().multiplyScalar(Math.sin(ang)))
-        if (radial.y > -0.1) break
-      }
-      return radial
-    }
-
-    const out = []
-    for (let i = 0; i < 22; i++) {
-      const u = Math.random()
-      const center = curve.getPointAt(u)
-      const radial = upperRadial(u)
-      out.push({
-        pos: center.clone().addScaledVector(radial, TUBE_R * 0.78),
-        rot: [Math.random() * 6, Math.random() * 6, Math.random() * 6],
-        scale: [3 + Math.random() * 5, 5 + Math.random() * 9, 3 + Math.random() * 5],
-      })
-    }
-    return out
-  }, [curve])
-
-  // instancing : les 22 blocs deviennent 1 seul draw call (dans chaque passe)
-  return (
-    <Instances geometry={chunk} limit={rocks.length} range={rocks.length}>
-      <meshStandardMaterial
-        color="#171219"
-        normalMap={rockNormalChunks}
-        normalScale={[1.1, 1.1]}
-        roughness={1}
-        metalness={0}
-      />
-      {rocks.map((it, i) => (
-        <Instance key={i} position={it.pos} rotation={it.rot} scale={it.scale} />
-      ))}
-    </Instances>
   )
 }
 

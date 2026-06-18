@@ -134,11 +134,3 @@ export function useTunnelCurve() {
     return new THREE.CatmullRomCurve3(pts, true, 'catmullrom', 0.5)
   }, [])
 }
-
-export function frameAt(curve, u) {
-  const tangent = curve.getTangentAt(u).normalize()
-  const ref = Math.abs(tangent.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0)
-  const normal = new THREE.Vector3().crossVectors(tangent, ref).normalize()
-  const binormal = new THREE.Vector3().crossVectors(tangent, normal).normalize()
-  return { tangent, normal, binormal }
-}

@@ -101,7 +101,7 @@ export function CaveMessage({ curve, uRef, exitRef }) {
 /** Message pendant la remontée verticale : posé dans le puits au-dessus du bout
  *  de grotte, FACE caméra en permanence (billboard). Apparaît en milieu de montée,
  *  s'efface en haut (à l'arrivée sur le lac). */
-export function ExitMessage({ curve, exitRef }) {
+export function ExitMessage({ exitRef }) {
   const group = useRef()
   const matRef = useRef()
   const tex = useMemo(() => makeTextTexture(EXIT_TITLE), [])
