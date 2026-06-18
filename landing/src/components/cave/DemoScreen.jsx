@@ -2,17 +2,18 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useVideoTexture } from '@react-three/drei'
 import * as THREE from 'three'
-import { LEAD, U_SCREENS, screenTransform } from './config'
+import { screenTransform } from './config'
 
 const SCREEN_W = 24
 const SCREEN_H = 13.5
 
 /** Grand écran démo en GRILLE DE FRAGMENTS : solide à l'approche (apparaît en
  *  fondu), puis chaque morceau s'envole quand le rubis le brise. */
-export function DemoScreens({ curve, uRef }) {
+export function DemoScreens({ curve, uRef, breakRef }) {
   const tex = useVideoTexture('/ruby-hero.mp4', { muted: true, loop: true, start: true })
   const group = useRef()
   const fragRefs = useRef([])
+  const playing = useRef(true) // état lecture vidéo (évite de spammer play/pause)
 
   const place = useMemo(() => screenTransform(curve), [curve])
 
@@ -60,10 +61,21 @@ export function DemoScreens({ curve, uRef }) {
   useFrame(() => {
     // fade TARDIF : invisible de loin (on voit la salle), apparaît à l'arrivée
     const a = THREE.MathUtils.clamp((uRef.current - 0.085) / 0.05, 0, 1)
-    // bris : étalé sur une grande course de scroll → se brise très lentement
-    const rubyU = THREE.MathUtils.clamp(uRef.current + LEAD, 0, 1)
-    const brk = THREE.MathUtils.clamp((rubyU - U_SCREENS) / 0.18, 0, 1)
+    // bris : piloté par le scroll (breakRef), indépendant de la position de Ruby
+    // → Ruby reste bloqué à l'écran tant que la vidéo n'est pas brisée à 100%
+    const brk = THREE.MathUtils.clamp(breakRef.current, 0, 1)
     const e = brk // déplacement proportionnel au scroll (pas d'accélération)
+
+    // PERF : la vidéo ne DÉCODE que quand l'écran est visible (de l'approche
+    // jusqu'au bris complet). Avant l'arrivée et une fois l'écran brisé, on met en
+    // pause → plus de décodage mp4 continu pendant tout le reste du parcours.
+    const shouldPlay = a > 0.001 && brk < 0.999
+    const vid = tex.image
+    if (vid && playing.current !== shouldPlay) {
+      playing.current = shouldPlay
+      if (shouldPlay) vid.play?.().catch(() => {})
+      else vid.pause?.()
+    }
 
     frags.forEach((f, i) => {
       const m = fragRefs.current[i]

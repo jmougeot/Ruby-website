@@ -175,7 +175,9 @@ export function WallFeatures({ curve, noise, rockNormal }) {
  *  sheen fresnel sur l'ENVIRONNEMENT seulement. Ne réfléchit pas la scène,
  *  donc aucun reflet du rubis. */
 export function Water() {
-  const geom = useMemo(() => new THREE.PlaneGeometry(440, 440, 110, 110), [])
+  // PERF : 80×80 au lieu de 110×110 (~12k→~6,5k sommets). Vagues dans le vertex
+  // shader → maille un peu plus grossière, invisible sur l'eau sombre de la grotte.
+  const geom = useMemo(() => new THREE.PlaneGeometry(440, 440, 80, 80), [])
   const uniforms = useMemo(() => ({ uTime: { value: 0 } }), [])
   const normalA = useMemo(() => {
     const t = makeNormalTex(256, 4, 1.1, 1.5)

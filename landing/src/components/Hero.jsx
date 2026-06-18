@@ -1,8 +1,14 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import { U_ARRIVE, U_HOLD, S_CAVE_END, S_EXIT_RISE, S_EXIT_HOLD, S_EXIT_END } from './cave/config'
 
 const CaveScene = lazy(() => import('./CaveScene'))
 const ease = [0.22, 1, 0.36, 1]
+
+// debug : ?debug=lake fige la scène sur le LAC et masque les calques d'UI (image
+// de repli, voile, texte) → on voit la 3D brute (mise au point du décor montagne).
+const DEBUG_LAKE =
+  typeof window !== 'undefined' && window.location.search.includes('debug=lake')
 
 /** Si la 3D plante (WebGL absent, etc.), on retombe sur l'image. */
 class Safe3D extends Component {
@@ -62,7 +68,7 @@ export default function Hero() {
       progress.current = p
       // le texte du hero descend (scroll vers le bas) à mesure qu'on entre dans la grotte
       if (overlayRef.current) {
-        const q = Math.min(1, Math.max(0, p / 0.16)) // 0→1 sur le tout début
+        const q = Math.min(1, Math.max(0, p / 0.1)) // 0→1 sur le tout début (≈1,5 écran)
         const down = q * window.innerHeight * 0.9 // glisse vers le bas, hors écran
         // léger fondu seulement sur la toute fin pour éviter un bord net
         const fade = Math.min(1, Math.max(0, 1 - (q - 0.7) / 0.3))
@@ -70,9 +76,108 @@ export default function Hero() {
         overlayRef.current.style.transform = `translateY(${down}px)`
         overlayRef.current.style.pointerEvents = q > 0.95 ? 'none' : 'auto'
       }
+      // AIMANT MULTI-ÉTAPES : chaque swipe happe vers la cible de l'étape courante.
+      // Se ré-arme si on repasse SOUS le seuil d'une étape (retour en arrière) → il
+      // happe à chaque approche, mais ne piège pas une fois l'étape franchie.
+      const s = findStage(p)
+      if (s) {
+        if (p < s.from) snapDoneTarget = null // ré-armement de cette étape
+        if (!snapping && snapDoneTarget !== s.to && p > s.from && p < s.to) runSnap(s.to)
+      }
     }
+    // ── AIMANT vers la vidéo démo ──────────────────────────────────────────
+    // Dès qu'on ENTRE dans la zone d'approche, la page est happée jusqu'à la vidéo
+    // (p = U_ARRIVE) et l'aimant PREND LA MAIN : il ne se laisse pas annuler par le
+    // scroll (chaque frame il re-tire vers la cible). Il se désarme à l'arrivée →
+    // ensuite scroll libre, pas de piège.
+    // ÉTAPES : à chaque swipe, l'aimant emmène vers la cible suivante.
+    //  1) 1er swipe (seuil BAS exprès → suffit du premier coup) → vidéo plein cadre.
+    //  2) 2e swipe → traverse le BRIS (vidéo cassée proprement) et descend jusqu'au
+    //     BAS DU TROU (S_CAVE_END), juste avant la remontée verticale.
+    // `from` de l'étape 2 = FIN de la pause (U_HOLD) : on laisse le user swiper
+    // librement sur la pause (Ruby figé sur la vidéo) → sa vitesse a le temps de
+    // s'établir, et l'aimant prend la main À CETTE vitesse (au lieu de ramper
+    // depuis vel≈0 s'il s'armait juste après la vidéo).
+    const SNAP_STAGES = [
+      { from: U_ARRIVE * 0.06, to: U_ARRIVE },
+      { from: U_HOLD, to: S_CAVE_END },
+      // 3) sortie de la grotte : on remonte et l'aimant BLOQUE devant le message
+      //    (palier dans le puits, avant le lac).
+      { from: S_CAVE_END, to: S_EXIT_RISE },
+      // 4) dernier swipe → on émerge et l'aimant BLOQUE sur le lac.
+      { from: S_EXIT_HOLD, to: S_EXIT_END },
+    ]
+    // étape active = la 1re dont la cible est encore DEVANT nous (pas atteinte).
+    const findStage = (p) => SNAP_STAGES.find((s) => p < s.to - 0.005) ?? null
+    let snapRaf = 0
+    let snapping = false
+    let snapDoneTarget = null // cible de la dernière étape résolue (ne pas re-happer)
+
+    // VITESSE DU USER : on mesure la vélocité de scroll (px/ms, lissée) pour en
+    // déduire la durée de l'aimant → il PROLONGE le geste au lieu d'une durée au
+    // hasard. Bornée [MIN, MAX] : jamais un saut instantané (seuil mini) ni une
+    // éternité si on approche au ralenti (seuil maxi).
+    let vel = 0 // px/ms (signé), lissé en EMA
+    let lastY = window.scrollY
+    let lastT = performance.now()
+    // bornes LARGES : si le max est trop bas, il écrase le calcul et force une
+    // vitesse > celle du user. On les garde permissives pour que ce soit bien la
+    // vélocité qui pilote (sauf cas extrêmes).
+    const SNAP_MIN_MS = 200 // jamais un saut instantané
+    const SNAP_MAX_MS = 2600 // approche au ralenti → se résout quand même
+    // FACTEUR DE VITESSE : >1 = l'aimant va PLUS vite que le swipe (emmène
+    // franchement vers la vidéo), <1 = plus posé. C'est le « speed à définir ».
+    const SNAP_SPEED_GAIN = 0.5
+    const runSnap = (snapTo) => {
+      const total = el.offsetHeight - window.innerHeight
+      if (total <= 0) return
+      const targetY = el.offsetTop + snapTo * total
+      const startY = window.scrollY
+      const dist = targetY - startY
+      if (Math.abs(dist) < 1) {
+        snapDoneTarget = snapTo
+        return
+      }
+      // VITESSE CONSTANTE = celle du swipe (× gain). Mouvement LINÉAIRE → on ne
+      // ralentit PAS à l'arrivée : on prolonge le geste tel quel jusqu'à la vidéo.
+      // durMs = distance / vitesse (px / (px/ms) = ms).
+      const speed = Math.max(Math.abs(vel) * SNAP_SPEED_GAIN, 0.05) // px/ms (évite /0)
+      const durMs = Math.min(SNAP_MAX_MS, Math.max(SNAP_MIN_MS, Math.abs(dist) / speed))
+      const t0 = performance.now()
+      snapping = true
+      const step = () => {
+        const k = Math.min(1, (performance.now() - t0) / durMs)
+        // LINÉAIRE : vitesse constante, pas de décélération en fin de course.
+        const e = k
+        window.scrollTo(0, startY + dist * e)
+        if (k >= 1) {
+          snapping = false
+          snapRaf = 0
+          snapDoneTarget = snapTo // désarme cette étape (la suivante s'armera au swipe suivant)
+          // RAZ de la mesure de vélocité : pendant le snap, lastY/lastT n'ont pas
+          // été mis à jour (gros déplacement ignoré) → sans ça, le swipe SUIVANT
+          // calcule une vélocité aberrante et l'aimant d'après part en vrille.
+          vel = 0
+          lastY = window.scrollY
+          lastT = performance.now()
+          return
+        }
+        snapRaf = requestAnimationFrame(step)
+      }
+      step()
+    }
+
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update)
+      if (snapping) return // pendant l'aimant c'est NOUS qui scrollons → on ignore
+      const now = performance.now()
+      const y = window.scrollY
+      const dt = now - lastT
+      if (dt > 0) {
+        vel = vel * 0.65 + ((y - lastY) / dt) * 0.35 // lissage EMA de la vélocité
+        lastY = y
+        lastT = now
+      }
     }
     update()
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -80,6 +185,7 @@ export default function Hero() {
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', update)
+      if (snapRaf) cancelAnimationFrame(snapRaf)
       if (raf) cancelAnimationFrame(raf)
     }
   }, [])
@@ -97,7 +203,7 @@ export default function Hero() {
   return (
     // section haute (3D) : la hauteur sert de "course" de scroll pour traverser
     // la grotte. Sans 3D (mobile/reduced-motion), hauteur d'écran normale.
-    <section ref={sectionRef} className={`relative w-full ${use3D ? 'h-[720vh]' : 'h-svh min-h-[36rem]'}`}>
+    <section ref={sectionRef} className={`relative w-full ${use3D ? 'h-[1620vh]' : 'h-svh min-h-[36rem]'}`}>
       {/* tout est épinglé à l'écran pendant qu'on défile la section */}
       <div className="sticky top-0 h-svh w-full overflow-hidden">
         {/* image = base + repli (mobile / reduced-motion / pendant le chargement 3D) */}
@@ -105,6 +211,7 @@ export default function Hero() {
           src="/hero-cave.jpg"
           alt=""
           aria-hidden="true"
+          style={DEBUG_LAKE ? { display: 'none' } : undefined}
           className={`absolute inset-0 h-full w-full object-cover ${reduce ? '' : 'kenburns'}`}
         />
 
@@ -120,6 +227,7 @@ export default function Hero() {
         )}
 
         {/* voile : sombre en haut (lisibilité header) + sombre en bas (texte) */}
+        {!DEBUG_LAKE && (
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -127,10 +235,12 @@ export default function Hero() {
               'linear-gradient(to bottom, rgba(8,8,10,0.6) 0%, rgba(8,8,10,0) 22%, rgba(8,8,10,0) 52%, rgba(8,8,10,0.85) 86%, #0b0b0d 100%)',
           }}
         />
+        )}
 
         {/* contenu du hero, ancré en bas, qui s'efface au scroll */}
         <div
           ref={overlayRef}
+          style={DEBUG_LAKE ? { display: 'none' } : undefined}
           className="absolute inset-0 z-10 mx-auto flex max-w-[1400px] flex-col items-center justify-end px-6 pb-20 text-center md:pb-24"
         >
           <motion.div variants={container} initial="hidden" animate="show" className="flex flex-col items-center">

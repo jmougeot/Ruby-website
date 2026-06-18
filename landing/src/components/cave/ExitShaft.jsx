@@ -10,8 +10,11 @@ export function ExitShaft({ curve, noise, rockNormal, rockRough }) {
   const END = useMemo(() => curve.getPointAt(U_END), [curve])
   const geometry = useMemo(() => {
     const botY = 18 // recouvre le plafond (~26) par le bas → scelle le pourtour du trou
-    const g = new THREE.CylinderGeometry(30, 21, LAKE_Y - botY, 48, 40, true)
-    g.translate(0, (botY + LAKE_Y) / 2, 0)
+    // le rebord s'arrête SOUS la surface (LAKE_Y) → caché par le plan d'eau opaque
+    // (on le franchit en émergeant) ; sinon l'anneau rocheux affleure et « sort de l'eau ».
+    const topY = LAKE_Y - 6
+    const g = new THREE.CylinderGeometry(30, 21, topY - botY, 48, 40, true)
+    g.translate(0, (botY + topY) / 2, 0)
     const pos = g.attributes.position
     const v = new THREE.Vector3()
     const colors = []
