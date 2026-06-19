@@ -153,6 +153,42 @@ export function makeGlowTex() {
   return t
 }
 
+/** Stries d'ÉCUME verticales (alpha blanc) pour une cascade : filets clairs par
+ *  colonne, hachés en pointillés. Modulation verticale PÉRIODIQUE (somme de sinus)
+ *  → tileable en Y, donc on peut faire défiler la texture sans couture. */
+export function makeStreakTex(size = 256) {
+  const c = document.createElement('canvas')
+  c.width = c.height = size
+  const ctx = c.getContext('2d')
+  const img = ctx.createImageData(size, size)
+  const d = img.data
+  // par colonne : intensité du filet + phase + fréquence (entière → période exacte)
+  const col = new Float32Array(size)
+  const ph = new Float32Array(size)
+  const kf = new Float32Array(size)
+  for (let x = 0; x < size; x++) {
+    col[x] = Math.pow(Math.random(), 2.4) // peu de colonnes fortes → filets espacés
+    ph[x] = Math.random() * Math.PI * 2
+    kf[x] = 2 + Math.floor(Math.random() * 4) // 2..5 ondes sur la hauteur (tileable)
+  }
+  for (let y = 0; y < size; y++) {
+    const yy = (y / size) * Math.PI * 2
+    for (let x = 0; x < size; x++) {
+      const m = 0.5 + 0.5 * Math.sin(yy * kf[x] + ph[x]) // pointillés périodiques
+      let a = col[x] * m
+      a = Math.max(0, a * 1.15 - 0.14) // seuil → vrais filets séparés
+      const i = (y * size + x) * 4
+      d[i] = d[i + 1] = d[i + 2] = 255
+      d[i + 3] = Math.min(255, a * 255)
+    }
+  }
+  ctx.putImageData(img, 0, 0)
+  const t = new THREE.CanvasTexture(c)
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.needsUpdate = true
+  return t
+}
+
 /** Anneau concentrique lumineux autour du noyau (look « iris » de l'image). */
 export function makeRingTex() {
   const sz = 256

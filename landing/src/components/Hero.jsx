@@ -1,14 +1,19 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { U_ARRIVE, U_HOLD, S_CAVE_END, S_EXIT_RISE, S_EXIT_HOLD, S_EXIT_END } from './cave/config'
+import { createScrollMagnet } from './cave/scrollChoreography'
+import { U_ARRIVE, U_HOLD, S_CAVE_END, S_MSG_HOLD } from './cave/config'
+import RubyLoader from './RubyLoader'
 
 const CaveScene = lazy(() => import('./CaveScene'))
 const ease = [0.22, 1, 0.36, 1]
+// devant le 1er panneau : Ruby « travaille » → ces statuts défilent en boucle
+const ANALYZE_MSGS = ['Analyse du CRM', 'Analyse des appels', 'Lecture de la base de données']
 
-// debug : ?debug=lake fige la scène sur le LAC et masque les calques d'UI (image
-// de repli, voile, texte) → on voit la 3D brute (mise au point du décor montagne).
-const DEBUG_LAKE =
-  typeof window !== 'undefined' && window.location.search.includes('debug=lake')
+// debug : ?debug=lake (lac) ou ?debug=exit0.18 (remontée figée) fige la scène et
+// masque les calques d'UI (image de repli, voile, texte, loader) → on voit la 3D
+// brute (mise au point du décor / du raccord grotte↔cheminée).
+const DEBUG_SCENE =
+  typeof window !== 'undefined' && /debug=(lake|exit)/.test(window.location.search)
 
 /** Si la 3D plante (WebGL absent, etc.), on retombe sur l'image. */
 class Safe3D extends Component {
@@ -27,16 +32,50 @@ export default function Hero() {
   // pas de saut de scroll quand la 3D s'affiche ensuite
   const [use3D] = useState(() => {
     if (typeof window === 'undefined') return false
-    return (
-      !window.matchMedia('(max-width: 768px)').matches &&
-      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    )
+    // 3D activée aussi sur mobile ; on respecte juste « réduire les animations »
+    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches
   })
   const [inView, setInView] = useState(true)
   const [docVisible, setDocVisible] = useState(true)
+  const [ready, setReady] = useState(false) // 3D a rendu sa 1re image → ferme le loader
+  const [start3D, setStart3D] = useState(false) // montage 3D retardé (cf. effet ci-dessous)
+  // salut de Ruby (bas du hero) : 'off' → 'hello' (« Bonjour ») → 'follow' (« Suis-moi », cliquable)
+  const [greet, setGreet] = useState('off')
+  const [onVideo, setOnVideo] = useState(false) // on est sur la vidéo démo → bouton « Continuer »
+  const [atPanel1, setAtPanel1] = useState(false) // devant le 1er panneau → statuts d'analyse en boucle
+  const [analyzeIdx, setAnalyzeIdx] = useState(0) // statut courant qui défile
   const sectionRef = useRef(null)
-  const overlayRef = useRef(null)
+  const overlayRef = useRef(null) // bloc titre (haut) — glisse vers le HAUT au scroll
+  const inviteRef = useRef(null) // bulle de Ruby (bas) — s'efface au scroll
+  const magnetRef = useRef(null) // aimant de scroll (clics « Suis-moi » / « Continuer »)
+  const onVideoRef = useRef(false) // miroir de onVideo lu dans la boucle de scroll (setState only on change)
+  const atPanel1Ref = useRef(false) // miroir de atPanel1 lu dans la boucle de scroll
   const progress = useRef(0) // 0→1 sur toute la hauteur du hero (piloté par le scroll)
+
+  // séquence du salut : à l'ouverture de la scène (ready), Ruby dit bonjour, puis
+  // après quelques secondes propose « Suis-moi » (cliquable).
+  useEffect(() => {
+    if (!ready) return
+    const hello = setTimeout(() => setGreet('hello'), 600)
+    const follow = setTimeout(() => setGreet('follow'), 4200)
+    return () => {
+      clearTimeout(hello)
+      clearTimeout(follow)
+    }
+  }, [ready])
+
+  // devant le 1er panneau : les statuts d'analyse défilent en boucle tant qu'on y est.
+  useEffect(() => {
+    if (!atPanel1) return
+    setAnalyzeIdx(0)
+    const t = setInterval(() => setAnalyzeIdx((i) => (i + 1) % ANALYZE_MSGS.length), 1600)
+    return () => clearInterval(t)
+  }, [atPanel1])
+
+  // clic « Suis-moi » → on glisse jusqu'à la vidéo démo (l'aimant fait le travail).
+  const followRuby = () => magnetRef.current?.snapTo(U_ARRIVE)
+  // clic « Continuer » (sur la vidéo) → on poursuit : bris de l'écran + croisière jusqu'au bout de grotte.
+  const continueJourney = () => magnetRef.current?.snapTo(S_CAVE_END)
 
   // fige le rendu 3D dès que le hero sort de l'écran (gros gain de perf)
   useEffect(() => {
@@ -56,128 +95,64 @@ export default function Hero() {
     return () => document.removeEventListener('visibilitychange', onVis)
   }, [])
 
-  // progression du scroll DANS le hero → pilote l'avancée du rubis (via progress ref)
+  // DÉMARRAGE 3D RETARDÉ : le parse du gros chunk Three.js fige le thread
+  // ~200-300 ms. On laisse d'abord le loader peindre et lancer son compteur sur
+  // un thread libre, PUIS on monte CaveScene (déclenche l'import + le parse).
+  // Coût : ~250 ms de chargement en plus, mais le départ du loader est lisse.
+  useEffect(() => {
+    const t = setTimeout(() => setStart3D(true), 250)
+    return () => clearTimeout(t)
+  }, [])
+
+  // progression du scroll DANS le hero → pilote l'avancée du rubis (via progress
+  // ref) + l'aimant multi-étapes (toute la dramaturgie est dans scrollChoreography).
   useEffect(() => {
     const el = sectionRef.current
     if (!el) return
     let raf = 0
+    const magnet = createScrollMagnet({
+      getTotal: () => el.offsetHeight - window.innerHeight,
+      getOffsetTop: () => el.offsetTop,
+    })
+    magnetRef.current = magnet
     const update = () => {
       raf = 0
       const total = el.offsetHeight - window.innerHeight
       const p = total > 0 ? Math.min(1, Math.max(0, -el.getBoundingClientRect().top / total)) : 0
       progress.current = p
-      // le texte du hero descend (scroll vers le bas) à mesure qu'on entre dans la grotte
+      // le TITRE (en haut) glisse vers le HAUT et s'efface dès qu'on entre dans la grotte
       if (overlayRef.current) {
         const q = Math.min(1, Math.max(0, p / 0.1)) // 0→1 sur le tout début (≈1,5 écran)
-        const down = q * window.innerHeight * 0.9 // glisse vers le bas, hors écran
-        // léger fondu seulement sur la toute fin pour éviter un bord net
-        const fade = Math.min(1, Math.max(0, 1 - (q - 0.7) / 0.3))
+        const up = q * window.innerHeight * 0.6 // glisse vers le haut, hors écran
+        const fade = Math.min(1, Math.max(0, 1 - (q - 0.4) / 0.4))
         overlayRef.current.style.opacity = String(fade)
-        overlayRef.current.style.transform = `translateY(${down}px)`
-        overlayRef.current.style.pointerEvents = q > 0.95 ? 'none' : 'auto'
+        overlayRef.current.style.transform = `translateY(${-up}px)`
+        overlayRef.current.style.pointerEvents = q > 0.6 ? 'none' : 'auto'
       }
-      // AIMANT MULTI-ÉTAPES : chaque swipe happe vers la cible de l'étape courante.
-      // Se ré-arme si on repasse SOUS le seuil d'une étape (retour en arrière) → il
-      // happe à chaque approche, mais ne piège pas une fois l'étape franchie.
-      const s = findStage(p)
-      if (s) {
-        if (p < s.from) snapDoneTarget = null // ré-armement de cette étape
-        if (!snapping && snapDoneTarget !== s.to && p > s.from && p < s.to) runSnap(s.to)
+      // la bulle de Ruby (en bas) s'efface vite dès qu'on commence à avancer
+      if (inviteRef.current) {
+        const fade = 1 - Math.min(1, Math.max(0, p / 0.025))
+        inviteRef.current.style.opacity = String(fade)
+        inviteRef.current.style.pointerEvents = p > 0.008 ? 'none' : 'auto'
       }
+      // « sur la vidéo » (pause plein cadre) → on propose le bouton « Continuer »
+      const v = p > U_ARRIVE - 0.015 && p < U_HOLD + 0.01
+      if (v !== onVideoRef.current) {
+        onVideoRef.current = v
+        setOnVideo(v)
+      }
+      // « devant le 1er panneau » (bout de grotte) → statuts d'analyse en boucle
+      const a = p > S_CAVE_END - 0.012 && p < S_MSG_HOLD + 0.012
+      if (a !== atPanel1Ref.current) {
+        atPanel1Ref.current = a
+        setAtPanel1(a)
+      }
+      // aimant multi-étapes : happe vers le palier suivant (étapes/sens gérés dedans)
+      magnet.maybeSnap(p)
     }
-    // ── AIMANT vers la vidéo démo ──────────────────────────────────────────
-    // Dès qu'on ENTRE dans la zone d'approche, la page est happée jusqu'à la vidéo
-    // (p = U_ARRIVE) et l'aimant PREND LA MAIN : il ne se laisse pas annuler par le
-    // scroll (chaque frame il re-tire vers la cible). Il se désarme à l'arrivée →
-    // ensuite scroll libre, pas de piège.
-    // ÉTAPES : à chaque swipe, l'aimant emmène vers la cible suivante.
-    //  1) 1er swipe (seuil BAS exprès → suffit du premier coup) → vidéo plein cadre.
-    //  2) 2e swipe → traverse le BRIS (vidéo cassée proprement) et descend jusqu'au
-    //     BAS DU TROU (S_CAVE_END), juste avant la remontée verticale.
-    // `from` de l'étape 2 = FIN de la pause (U_HOLD) : on laisse le user swiper
-    // librement sur la pause (Ruby figé sur la vidéo) → sa vitesse a le temps de
-    // s'établir, et l'aimant prend la main À CETTE vitesse (au lieu de ramper
-    // depuis vel≈0 s'il s'armait juste après la vidéo).
-    const SNAP_STAGES = [
-      { from: U_ARRIVE * 0.06, to: U_ARRIVE },
-      { from: U_HOLD, to: S_CAVE_END },
-      // 3) sortie de la grotte : on remonte et l'aimant BLOQUE devant le message
-      //    (palier dans le puits, avant le lac).
-      { from: S_CAVE_END, to: S_EXIT_RISE },
-      // 4) dernier swipe → on émerge et l'aimant BLOQUE sur le lac.
-      { from: S_EXIT_HOLD, to: S_EXIT_END },
-    ]
-    // étape active = la 1re dont la cible est encore DEVANT nous (pas atteinte).
-    const findStage = (p) => SNAP_STAGES.find((s) => p < s.to - 0.005) ?? null
-    let snapRaf = 0
-    let snapping = false
-    let snapDoneTarget = null // cible de la dernière étape résolue (ne pas re-happer)
-
-    // VITESSE DU USER : on mesure la vélocité de scroll (px/ms, lissée) pour en
-    // déduire la durée de l'aimant → il PROLONGE le geste au lieu d'une durée au
-    // hasard. Bornée [MIN, MAX] : jamais un saut instantané (seuil mini) ni une
-    // éternité si on approche au ralenti (seuil maxi).
-    let vel = 0 // px/ms (signé), lissé en EMA
-    let lastY = window.scrollY
-    let lastT = performance.now()
-    // bornes LARGES : si le max est trop bas, il écrase le calcul et force une
-    // vitesse > celle du user. On les garde permissives pour que ce soit bien la
-    // vélocité qui pilote (sauf cas extrêmes).
-    const SNAP_MIN_MS = 200 // jamais un saut instantané
-    const SNAP_MAX_MS = 2600 // approche au ralenti → se résout quand même
-    // FACTEUR DE VITESSE : >1 = l'aimant va PLUS vite que le swipe (emmène
-    // franchement vers la vidéo), <1 = plus posé. C'est le « speed à définir ».
-    const SNAP_SPEED_GAIN = 0.5
-    const runSnap = (snapTo) => {
-      const total = el.offsetHeight - window.innerHeight
-      if (total <= 0) return
-      const targetY = el.offsetTop + snapTo * total
-      const startY = window.scrollY
-      const dist = targetY - startY
-      if (Math.abs(dist) < 1) {
-        snapDoneTarget = snapTo
-        return
-      }
-      // VITESSE CONSTANTE = celle du swipe (× gain). Mouvement LINÉAIRE → on ne
-      // ralentit PAS à l'arrivée : on prolonge le geste tel quel jusqu'à la vidéo.
-      // durMs = distance / vitesse (px / (px/ms) = ms).
-      const speed = Math.max(Math.abs(vel) * SNAP_SPEED_GAIN, 0.05) // px/ms (évite /0)
-      const durMs = Math.min(SNAP_MAX_MS, Math.max(SNAP_MIN_MS, Math.abs(dist) / speed))
-      const t0 = performance.now()
-      snapping = true
-      const step = () => {
-        const k = Math.min(1, (performance.now() - t0) / durMs)
-        // LINÉAIRE : vitesse constante, pas de décélération en fin de course.
-        const e = k
-        window.scrollTo(0, startY + dist * e)
-        if (k >= 1) {
-          snapping = false
-          snapRaf = 0
-          snapDoneTarget = snapTo // désarme cette étape (la suivante s'armera au swipe suivant)
-          // RAZ de la mesure de vélocité : pendant le snap, lastY/lastT n'ont pas
-          // été mis à jour (gros déplacement ignoré) → sans ça, le swipe SUIVANT
-          // calcule une vélocité aberrante et l'aimant d'après part en vrille.
-          vel = 0
-          lastY = window.scrollY
-          lastT = performance.now()
-          return
-        }
-        snapRaf = requestAnimationFrame(step)
-      }
-      step()
-    }
-
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update)
-      if (snapping) return // pendant l'aimant c'est NOUS qui scrollons → on ignore
-      const now = performance.now()
-      const y = window.scrollY
-      const dt = now - lastT
-      if (dt > 0) {
-        vel = vel * 0.65 + ((y - lastY) / dt) * 0.35 // lissage EMA de la vélocité
-        lastY = y
-        lastT = now
-      }
+      magnet.trackVelocity()
     }
     update()
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -185,7 +160,8 @@ export default function Hero() {
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', update)
-      if (snapRaf) cancelAnimationFrame(snapRaf)
+      magnet.dispose()
+      magnetRef.current = null
       if (raf) cancelAnimationFrame(raf)
     }
   }, [])
@@ -206,44 +182,59 @@ export default function Hero() {
     <section ref={sectionRef} className={`relative w-full ${use3D ? 'h-[1620vh]' : 'h-svh min-h-[36rem]'}`}>
       {/* tout est épinglé à l'écran pendant qu'on défile la section */}
       <div className="sticky top-0 h-svh w-full overflow-hidden">
-        {/* image = base + repli (mobile / reduced-motion / pendant le chargement 3D) */}
-        <img
-          src="/hero-cave.jpg"
-          alt=""
-          aria-hidden="true"
-          style={DEBUG_LAKE ? { display: 'none' } : undefined}
-          className={`absolute inset-0 h-full w-full object-cover ${reduce ? '' : 'kenburns'}`}
-        />
+        {/* image de repli UNIQUEMENT sans 3D (animations réduites). En 3D, le loader
+            puis la scène couvrent tout l'écran → plus d'image qui transparaît. */}
+        {!use3D && (
+          <img
+            src="/hero-cave.jpg"
+            alt=""
+            aria-hidden="true"
+            className={`absolute inset-0 h-full w-full object-cover ${reduce ? '' : 'kenburns'}`}
+          />
+        )}
 
-        {/* grotte 3D par-dessus, sur desktop capable */}
-        {use3D && (
+        {/* grotte 3D par-dessus — montée APRÈS un court délai (start3D) pour
+            laisser le loader démarrer son animation sur un thread libre. */}
+        {use3D && start3D && (
           <Safe3D>
             <Suspense fallback={null}>
               <div className="absolute inset-0">
-                <CaveScene active={inView && docVisible} scroll={progress} />
+                <CaveScene
+                  active={inView && docVisible}
+                  scroll={progress}
+                  onReady={() => setReady(true)} // ferme le loader + lance le salut de Ruby
+                />
               </div>
             </Suspense>
           </Safe3D>
         )}
 
+        {/* écran de chargement classe (noir + ruby) tant que la 3D charge */}
+        {use3D && !DEBUG_SCENE && <RubyLoader ready={ready} />}
+
         {/* voile : sombre en haut (lisibilité header) + sombre en bas (texte) */}
-        {!DEBUG_LAKE && (
+        {!DEBUG_SCENE && (
         <div
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              'linear-gradient(to bottom, rgba(8,8,10,0.6) 0%, rgba(8,8,10,0) 22%, rgba(8,8,10,0) 52%, rgba(8,8,10,0.85) 86%, #0b0b0d 100%)',
+              'linear-gradient(to bottom, rgba(8,8,10,0.6) 0%, rgba(8,8,10,0) 22%, rgba(8,8,10,0) 58%, rgba(8,8,10,0.5) 84%, rgba(11,11,13,0.92) 100%)',
           }}
         />
         )}
 
-        {/* contenu du hero, ancré en bas, qui s'efface au scroll */}
+        {/* TITRE — ancré en HAUT, glisse vers le haut et s'efface au scroll */}
         <div
           ref={overlayRef}
-          style={DEBUG_LAKE ? { display: 'none' } : undefined}
-          className="absolute inset-0 z-10 mx-auto flex max-w-[1400px] flex-col items-center justify-end px-6 pb-20 text-center md:pb-24"
+          style={DEBUG_SCENE ? { display: 'none' } : undefined}
+          className="absolute inset-x-0 top-0 z-10 px-6 pt-28 md:pt-32"
         >
-          <motion.div variants={container} initial="hidden" animate="show" className="flex flex-col items-center">
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="mx-auto flex max-w-3xl flex-col items-center text-center"
+          >
             <motion.span
               variants={item}
               className="mb-5 text-xs font-medium uppercase tracking-[0.22em] text-muted"
@@ -263,17 +254,79 @@ export default function Hero() {
               get better after every call.
             </motion.p>
 
-            <motion.div variants={item} className="mt-9 flex flex-col items-center gap-4">
+            <motion.div variants={item} className="mt-9">
               <a
                 href="#demo"
-                className="rounded-full bg-ruby px-7 py-3.5 text-[15px] font-medium text-white shadow-[0_0_30px_-6px_var(--ruby-glow)] transition-shadow hover:shadow-[0_0_44px_-4px_var(--ruby-glow)]"
+                className="rounded-full bg-ink px-7 py-3.5 text-[15px] font-medium text-night shadow-[0_8px_30px_-8px_rgba(0,0,0,0.5)] transition-opacity hover:opacity-90"
               >
-                Book a demo
+                Get Ruby
               </a>
-              <span className="text-sm text-muted">Scroll to follow Ruby ↓</span>
             </motion.div>
           </motion.div>
         </div>
+
+        {/* BULLE DE RUBY — ancrée en BAS, près du rubis 3D. Dit « Bonjour » puis
+            propose « Suis-moi » (cliquable → glisse vers la vidéo démo). */}
+        {use3D && !DEBUG_SCENE && (
+          <div
+            ref={inviteRef}
+            className="absolute inset-x-0 bottom-0 z-10 flex justify-center px-6 pb-12 md:pb-14"
+          >
+            <button
+              type="button"
+              onClick={greet === 'follow' ? followRuby : undefined}
+              aria-live="polite"
+              className={`speech-pill${greet !== 'off' ? ' is-in' : ''}${
+                greet === 'follow' ? ' is-follow' : ''
+              }`}
+            >
+              {greet === 'follow' && (
+                <span className="pill-orb" aria-hidden="true">
+                  <span className="pill-orb-spin" />
+                </span>
+              )}
+              {greet === 'follow' ? 'Suis-moi ↓' : 'Bonjour, je suis Ruby'}
+            </button>
+          </div>
+        )}
+
+        {/* SUR LA VIDÉO — le même bouton, version « Continuer » : poursuit le voyage
+            (bris de l'écran + croisière jusqu'au bout de grotte). */}
+        {use3D && !DEBUG_SCENE && (
+          <div
+            className={`absolute inset-x-0 bottom-0 z-10 flex justify-center px-6 pb-12 transition-opacity duration-500 md:pb-14 ${
+              onVideo ? 'opacity-100' : 'pointer-events-none opacity-0'
+            }`}
+          >
+            {/* rendu SEULEMENT sur la vidéo → ne capte jamais le clic de « Suis-moi » */}
+            {onVideo && (
+              <button type="button" onClick={continueJourney} className="speech-pill is-in is-follow">
+                <span className="pill-orb" aria-hidden="true">
+                  <span className="pill-orb-spin" />
+                </span>
+                Continuer ↓
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* DEVANT LE 1er PANNEAU — Ruby « travaille » : statuts d'analyse en boucle. */}
+        {use3D && !DEBUG_SCENE && (
+          <div
+            className={`absolute inset-x-0 bottom-0 z-10 flex justify-center px-6 pb-12 transition-opacity duration-500 md:pb-14 ${
+              atPanel1 ? 'opacity-100' : 'pointer-events-none opacity-0'
+            }`}
+          >
+            <span className="speech-pill is-in" role="status" aria-live="polite">
+              <span className="pill-orb" aria-hidden="true">
+                <span className="pill-orb-spin" />
+              </span>
+              <span key={analyzeIdx} className="cycle-msg">
+                {ANALYZE_MSGS[analyzeIdx]}
+              </span>
+            </span>
+          </div>
+        )}
       </div>
     </section>
   )

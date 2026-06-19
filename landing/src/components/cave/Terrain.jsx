@@ -1,16 +1,38 @@
 import { useCallback, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { TUBE_R, WATER_Y, U_SCREENS, U_END, HOLE_HALF_U, HOLE_UP } from './config'
+import { TUBE_R, WATER_Y, U_SCREENS, U_END, exitPath } from './config'
 import { makeNormalTex } from './textures'
 
-/** Parois rocheuses : grandes formes + grain fin (normal map) + AO dans les
- *  creux + rugosité variée + bas mouillé. */
+/** Parois rocheuses — UN SEUL tunnel, fait d'UNE SEULE courbe : il suit le TRAJET
+ *  (la boucle, de 0 à U_END) puis se PROLONGE par le chemin de sortie (exitPath, la
+ *  même source que la caméra) qui se redresse et monte au lac. Une courbe → une
+ *  TubeGeometry → une seule surface de roche CONTINUE qui se relève : plus de second
+ *  mesh « cheminée » qui se devine comme une pièce rapportée, plus de trou à sceller.
+ *  NB : la boucle `curve` reste la référence de TOUTE la chorégraphie ; ce tunnel
+ *  n'est QUE le maillage, calé sur le même trajet + le même chemin de sortie. */
 export function TunnelWalls({ curve, noise, rockNormal, rockRough }) {
+  const tunnelCurve = useMemo(() => {
+    const pts = [curve.getPointAt(0.98), curve.getPointAt(0.99)] // amorce dans le dos du départ
+    const NJ = 64
+    for (let k = 0; k <= NJ; k++) pts.push(curve.getPointAt((k / NJ) * U_END)) // TRAJET (suit la boucle)
+    // SORTIE : on enchaîne le chemin de sortie (1er point = END, déjà présent → on saute)
+    const exitPts = exitPath(curve).getPoints(48)
+    for (let k = 1; k < exitPts.length; k++) pts.push(exitPts[k])
+    return new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5)
+  }, [curve])
+
   const geometry = useMemo(() => {
-    const TUBULAR = 760
+    const TUBULAR = 480
     const RADIAL = 32
-    const g = new THREE.TubeGeometry(curve, TUBULAR, TUBE_R, RADIAL, true)
+    const g = new THREE.TubeGeometry(tunnelCurve, TUBULAR, TUBE_R, RADIAL, false)
+    // ÉLARGISSEMENT de la salle vidéo : repéré par DISTANCE MONDE au point de l'écran
+    // (la paramétrisation de CE tunnel ≠ celle de la boucle → on ne compare plus u,
+    // on compare la position monde du centre de chaque anneau).
+    const screenC = curve.getPointAt(U_SCREENS)
+    const ROOM_R = 42 // rayon monde d'influence de l'ouverture en salle
+    const ringC = []
+    for (let j = 0; j <= TUBULAR; j++) ringC.push(tunnelCurve.getPointAt(j / TUBULAR))
     const pos = g.attributes.position
     const nor = g.attributes.normal
     const v = new THREE.Vector3()
@@ -20,7 +42,6 @@ export function TunnelWalls({ curve, noise, rockNormal, rockRough }) {
     const warm = new THREE.Color('#322733')
     const wet = new THREE.Color('#090910')
     const mineral = new THREE.Color('#24303a') // veines minérales froides
-    const ceil = new Array(pos.count) // sommets du plafond, au bout → trou de sortie
     for (let i = 0; i < pos.count; i++) {
       v.fromBufferAttribute(pos, i)
       n.fromBufferAttribute(nor, i)
@@ -34,17 +55,13 @@ export function TunnelWalls({ curve, noise, rockNormal, rockRough }) {
         freq *= 2.15
       }
       v.addScaledVector(n, d * 7.6)
-      // ÉLARGISSEMENT EN SALLE autour de l'écran : pousse les parois vers
-      // l'extérieur en cloche autour de U_SCREENS → la grotte s'ouvre.
-      const u = Math.floor(i / (RADIAL + 1)) / TUBULAR
-      const du = Math.abs(u - U_SCREENS)
-      if (du < 0.075) {
-        const bump = 0.5 * (1 + Math.cos((du / 0.075) * Math.PI)) // 1 au centre → 0
+      // cloche d'ouverture autour de l'écran (inchangé, repéré par distance monde)
+      const ring = ringC[Math.floor(i / (RADIAL + 1))]
+      const dist = ring ? ring.distanceTo(screenC) : Infinity
+      if (dist < ROOM_R) {
+        const bump = 0.5 * (1 + Math.cos((dist / ROOM_R) * Math.PI)) // 1 au centre → 0
         v.addScaledVector(n, bump * 34)
       }
-      // au BOUT de la grotte : marque les sommets du plafond (normale ~ vers le
-      // haut) sur une fenêtre courte → leurs faces seront retirées = vrai trou.
-      ceil[i] = Math.abs(u - U_END) < HOLE_HALF_U && n.y > HOLE_UP
       pos.setXYZ(i, v.x, v.y, v.z)
       let c = rock.clone().lerp(warm, THREE.MathUtils.clamp(d * 0.5 + 0.5, 0, 1))
       // veines minérales : grandes plaques de teinte (bruit basse fréquence)
@@ -59,31 +76,41 @@ export function TunnelWalls({ curve, noise, rockNormal, rockRough }) {
       colors.push(c.r, c.g, c.b)
     }
     g.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
-    // retire les faces du plafond marquées → ouverture réelle vers la cheminée
-    const idx = g.index.array
-    const keep = []
-    for (let f = 0; f < idx.length; f += 3) {
-      const a = idx[f]
-      const b = idx[f + 1]
-      const c = idx[f + 2]
-      if ((ceil[a] ? 1 : 0) + (ceil[b] ? 1 : 0) + (ceil[c] ? 1 : 0) >= 2) continue
-      keep.push(a, b, c)
-    }
-    g.setIndex(keep)
     g.computeVertexNormals()
     return g
-  }, [curve, noise])
+  }, [tunnelCurve, curve, noise])
+
+  // grain de roche à densité CONSTANTE : le repeat de base (calé sur la boucle
+  // entière) est remis à l'échelle par la longueur de CE tunnel → même échelle de
+  // texel partout, montée comprise (aucune rupture de grain au redressement).
+  const lenRatio = useMemo(() => tunnelCurve.getLength() / curve.getLength(), [tunnelCurve, curve])
+  const normal = useMemo(() => {
+    const t = rockNormal.clone()
+    t.repeat.set(rockNormal.repeat.x * lenRatio, rockNormal.repeat.y)
+    t.needsUpdate = true
+    return t
+  }, [rockNormal, lenRatio])
+  const rough = useMemo(() => {
+    const t = rockRough.clone()
+    t.repeat.set(rockRough.repeat.x * lenRatio, rockRough.repeat.y)
+    t.needsUpdate = true
+    return t
+  }, [rockRough, lenRatio])
 
   return (
     <mesh geometry={geometry}>
       <meshStandardMaterial
         vertexColors
-        normalMap={rockNormal}
+        normalMap={normal}
         normalScale={[1.7, 1.7]}
-        roughnessMap={rockRough}
+        roughnessMap={rough}
         roughness={1}
         metalness={0.05}
         side={THREE.BackSide}
+        // léger lift de la roche (atténué par le fog avec la distance). Volontairement
+        // BAS → parois sombres ; c'est l'eau et le fond qui portent la lumière.
+        emissive="#1b2a33"
+        emissiveIntensity={0.12}
       />
     </mesh>
   )
@@ -152,12 +179,16 @@ transformed.z += wHeight(position.xy);`,
   return (
     <mesh geometry={geom} rotation={[-Math.PI / 2, 0, 0]} position={[0, WATER_Y, 0]}>
       <meshPhysicalMaterial
-        color="#08171f"
+        color="#115b5e"
         roughness={0.16}
         metalness={0}
         clearcoat={1}
         clearcoatRoughness={0.14}
-        envMapIntensity={1.35}
+        envMapIntensity={2.3}
+        // teinte + glow turquoise discret : garantit le rendu turquoise même là où
+        // l'eau ne reflète que l'environnement bleuté (knobs : color / emissive*).
+        emissive="#0e5258"
+        emissiveIntensity={0.22}
         normalMap={normalA}
         normalScale={[0.32, 0.32]}
         clearcoatNormalMap={normalB}

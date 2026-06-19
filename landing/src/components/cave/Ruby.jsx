@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Trail } from '@react-three/drei'
 import * as THREE from 'three'
-import { WATER_Y, U_END, LAKE_Y, LEAD, U_SCREENS, smooth01, screenTransform, CAM, damp3, dampN } from './config'
+import { WATER_Y, LEAD, U_SCREENS, smooth01, screenTransform, CAM, damp3, dampN, exitChoreography } from './config'
 import { makeGlowTex, makeRingTex } from './textures'
 
 /** Gemme multi-couches :
@@ -82,38 +82,14 @@ export function RubyRig({ curve, uRef, exitRef }) {
   const camOffset = useMemo(() => new THREE.Vector3(), [])
   const lookTarget = useRef(new THREE.Vector3(0, WATER_Y + 6, 0))
   const SCREEN = useMemo(() => screenTransform(curve), [curve])
-  // repères de la sortie (ancrés sur le bout de la grotte) : on monte tout droit
-  // au-dessus de END, regard d'abord vers la lumière du haut puis vers l'horizon.
-  const END = useMemo(() => curve.getPointAt(U_END), [curve])
-  const horizDir = useMemo(() => {
-    const t = curve.getTangentAt(U_END).clone()
-    t.y = 0
-    return t.normalize()
-  }, [curve])
-  // un peu en avant en plus de "vers le haut" → évite le lookAt dégénéré (regard
-  // exactement vertical ∥ à up) qui ferait basculer la caméra.
-  const upLook = useMemo(
-    () => new THREE.Vector3(END.x, LAKE_Y + 60, END.z).addScaledVector(horizDir, 40),
-    [END, horizDir],
-  )
-  // regard final vers la LIGNE D'HORIZON (là où les versants plongent dans le lac) :
-  // cible basse et lointaine → le lac occupe le tiers inférieur du cadre et les
-  // cimes colossales le surplombent. La petitesse vient de leur HAUTEUR, pas d'un
-  // regard braqué au ciel (qui ferait disparaître le lac).
-  // regard nettement RELEVÉ vers le sommet : cible haute et assez proche → fort
-  // angle vers le haut → la ligne d'eau descend tout en bas (~1/10), la montagne
-  // occupe le reste de la hauteur.
-  const horizonLook = useMemo(
-    () => new THREE.Vector3(END.x, LAKE_Y + 170, END.z).addScaledVector(horizDir, 200),
-    [END, horizDir],
-  )
+  // SORTIE : les 3 poses (A bout de grotte → B lecture → C lac) en coords monde,
+  // ancrées sur le bout de grotte. Mêmes points que le message de sortie.
+  const EXIT = useMemo(() => exitChoreography(curve), [curve])
   const tmp = useMemo(
     () => ({
       follow: new THREE.Vector3(),
       fill: new THREE.Vector3(),
       look: new THREE.Vector3(),
-      exitPos: new THREE.Vector3(),
-      exitLook: new THREE.Vector3(),
       rubyExit: new THREE.Vector3(),
       camGoal: new THREE.Vector3(),
       rubyGoal: new THREE.Vector3(),
@@ -136,7 +112,8 @@ export function RubyRig({ curve, uRef, exitRef }) {
     const rt = THREE.MathUtils.clamp(t + LEAD, 0, 1)
 
     // ── phases (gating, inchangé) ──
-    const ex = smooth01(exitRef.current)
+    const exr = THREE.MathUtils.clamp(exitRef.current, 0, 1) // remontée BRUTE (repère des poses)
+    const ex = smooth01(exr) // version lissée (FOV / lissages globaux)
     // approche : la salle s'ouvre tôt (la caméra recule un peu)
     const wide = THREE.MathUtils.clamp((rt - 0.04) / 0.08, 0, 1)
     // climax : la caméra plonge face à l'écran à l'ARRIVÉE (tunnel court)
@@ -159,10 +136,13 @@ export function RubyRig({ curve, uRef, exitRef }) {
     // face à l'écran, plein cadre (pile en face → image droite)
     tmp.fill.copy(SCREEN.center).addScaledVector(SCREEN.normal, 8.0)
     tmp.camGoal.lerpVectors(tmp.follow, tmp.fill, eFocus)
-    // sortie : caméra TRÈS BASSE au ras de l'eau, devant le bout de grotte
-    if (ex > 0.0001) {
-      tmp.exitPos.set(END.x, LAKE_Y + 3, END.z).addScaledVector(horizDir, -8)
-      tmp.camGoal.lerp(tmp.exitPos, ex)
+    // SORTIE : 3 poses (A=croisière vivante → B=lecture → C=lac) en 2 segments
+    // lissés. L'ARRÊT de lecture = EXACTEMENT la pose B (exr = EXIT.read) ; plus de
+    // lerp flou « 30 % du chemin ».
+    if (exr > 0.0001) {
+      const r = EXIT.read
+      if (exr <= r) tmp.camGoal.lerp(EXIT.camB, smooth01(exr / r)) // A → B (montée → arrêt)
+      else tmp.camGoal.copy(EXIT.camB).lerp(EXIT.camC, smooth01((exr - r) / (1 - r))) // B → C
     }
     // chase amorti : MOU en croisière (filtre l'ondulation des virages), NET au
     // climax écran / à la sortie. Snap à la 1re frame (évite un glissement depuis l'origine).
@@ -177,17 +157,19 @@ export function RubyRig({ curve, uRef, exitRef }) {
     tmp.look.y = WATER_Y + CAM.lookHeight
     // climax : on vise PROGRESSIVEMENT le centre de l'écran (eFocus 0→1)
     tmp.look.lerp(SCREEN.center, eFocus)
-    // sortie : bascule lumière du haut → horizon (séquence inchangée)
-    if (ex > 0.0001) {
-      tmp.exitLook.copy(upLook).lerp(horizonLook, THREE.MathUtils.clamp((ex - 0.2) / 0.8, 0, 1))
-      tmp.look.lerp(tmp.exitLook, smooth01(ex / 0.25))
+    // SORTIE : on regarde le MESSAGE en montant (pose B), puis l'horizon (pose C)
+    if (exr > 0.0001) {
+      const r = EXIT.read
+      if (exr <= r) tmp.look.lerp(EXIT.lookB, smooth01(exr / r))
+      else tmp.look.copy(EXIT.lookB).lerp(EXIT.lookC, smooth01((exr - r) / (1 - r)))
     }
     camera.up.set(0, 1, 0)
     if (firstFrame.current) lookTarget.current.copy(tmp.look)
     else {
-      // à l'approche du verrouillage écran (eFocus→1) on RESSERRE le lissage → la vue
-      // se cale net sur la vidéo SANS le petit saut d'avant (bascule damp→copy supprimée).
-      const lookTau = ex > 0.0001 ? CAM.lookTau * 0.6 : THREE.MathUtils.lerp(CAM.lookTau, CAM.lookLockTau, eFocus)
+      // un seul lissage du regard, CONTINU : resserré au climax écran (eFocus) ET en
+      // sortie (ex) → se cale net sur la vidéo puis sur les poses, sans saut sec ni
+      // à-coup au début de la remontée.
+      const lookTau = THREE.MathUtils.lerp(CAM.lookTau, CAM.lookLockTau, Math.max(eFocus, ex))
       damp3(lookTarget.current, tmp.look, lookTau, delta)
     }
 
@@ -203,17 +185,27 @@ export function RubyRig({ curve, uRef, exitRef }) {
     tmp.forward.copy(lookTarget.current).sub(camera.position)
     if (tmp.forward.lengthSq() < 1e-6) tmp.forward.copy(camTangent)
     tmp.forward.normalize()
-    // INTRO : au tout début, le rubis descend DU HAUT (offset intégré à la cible →
-    // descente naturellement amortie) et se centre quand le texte du hero s'efface.
-    const introY = smooth01(THREE.MathUtils.clamp(1 - uRef.current / 0.1, 0, 1)) * 24
+    // INTRO : au tout début, le rubis est posé BAS dans le cadre (près du bord
+    // inférieur) — « il démarre d'ici » — puis remonte à sa hauteur de croisière
+    // quand on commence à avancer (uRef → 0.1).
+    const intro = smooth01(THREE.MathUtils.clamp(1 - uRef.current / 0.1, 0, 1))
     tmp.rubyGoal.copy(camera.position).addScaledVector(tmp.forward, CAM.rubyAhead)
-    tmp.rubyGoal.y += -CAM.rubyDrop + introY + Math.sin(e * 0.7) * 0.5 // posé bas + respiration
+    // posé bas dans le cadre mais REMONTÉ au départ (ne touche pas la bulle « Suis-moi »),
+    // puis redescend à sa hauteur de croisière quand on commence à avancer.
+    tmp.rubyGoal.y += -CAM.rubyDrop + intro * 1.5 + Math.sin(e * 0.7) * 0.5 // posé bas + respiration
     // BRIS : le rubis crève l'écran (cible = centre de l'écran)
     tmp.rubyGoal.lerp(SCREEN.center, eFocus)
-    // SORTIE : va se poser à la surface du lac, un peu en avant
-    if (ex > 0.0001) {
-      tmp.rubyExit.set(END.x, LAKE_Y + 1.3 + Math.sin(e * 0.7) * 0.4, END.z).addScaledVector(horizDir, 18)
-      tmp.rubyGoal.lerp(tmp.rubyExit, ex)
+    // SORTIE : le rubis MÈNE la montée (pose B, devant la caméra) puis se pose sur
+    // le lac (pose C) — mêmes 2 segments que la caméra.
+    if (exr > 0.0001) {
+      const r = EXIT.read
+      if (exr <= r) {
+        tmp.rubyGoal.lerp(EXIT.rubyB, smooth01(exr / r))
+      } else {
+        tmp.rubyExit.copy(EXIT.rubyC)
+        tmp.rubyExit.y += Math.sin(e * 0.7) * 0.4 // respiration sur l'eau
+        tmp.rubyGoal.copy(EXIT.rubyB).lerp(tmp.rubyExit, smooth01((exr - r) / (1 - r)))
+      }
     }
     if (mesh.current) {
       if (firstFrame.current) mesh.current.position.copy(tmp.rubyGoal)

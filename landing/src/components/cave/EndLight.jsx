@@ -29,9 +29,10 @@ export function EndLight({ curve, uRef }) {
   })
   return (
     <group>
-      <spotLight ref={spot} color="#8fc6df" intensity={950} distance={280} angle={0.95} penumbra={1} decay={1.15} />
+      {/* lumière du fond ENCORE renforcée → glow du fond + GLINTS turquoise sur l'eau */}
+      <spotLight ref={spot} color="#8fc6df" intensity={2200} distance={340} angle={0.95} penumbra={1} decay={1.15} />
       <object3D ref={target} />
-      <pointLight ref={fill} color="#5f9fc0" intensity={55} distance={120} decay={1.5} />
+      <pointLight ref={fill} color="#5f9fc0" intensity={180} distance={160} decay={1.5} />
     </group>
   )
 }

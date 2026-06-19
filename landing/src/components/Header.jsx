@@ -17,7 +17,7 @@ export default function Header() {
             href="#demo"
             className="rounded-full bg-ink px-4 py-2 text-[13px] font-medium text-night transition-opacity hover:opacity-90"
           >
-            Book a demo
+            Get Ruby
           </a>
         </nav>
       </div>

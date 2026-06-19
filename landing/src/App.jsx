@@ -54,7 +54,7 @@ export default function App() {
                 href="#"
                 className="inline-block rounded-full bg-ruby px-8 py-4 text-[15px] font-medium text-white shadow-[0_0_40px_-6px_var(--ruby-glow)] transition-shadow hover:shadow-[0_0_52px_-4px_var(--ruby-glow)]"
               >
-                Book a demo
+                Get Ruby
               </a>
             </motion.div>
           </div>
