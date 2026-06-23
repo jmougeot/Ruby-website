@@ -24,20 +24,20 @@ Sauter · Exploser · Rebondir · Tourner · Fly-in · Scale-up agressif.
 
 Le dispositif central (cf. `design.md`). Une ligne rouge continue suit le scroll de haut en bas. Techniquement, c'est elle qui pilote le « plan-séquence » :
 
-- elle **épaissit / pulse** aux moments d'insight (sections 1 et 2),
-- elle **s'apaise et se stabilise** dans la maîtrise (section 3),
-- elle ne s'interrompt **jamais** entre les sections → sensation d'un seul univers traversé.
+- elle **épaissit / pulse** aux moments d'insight (phases 2 et 3),
+- elle **s'apaise et se stabilise** dans la maîtrise (phase 4),
+- elle ne s'interrompt **jamais** entre les phases → sensation d'un seul univers traversé.
 
 > Règle : on ne pense pas « section 1 → section 2 → section 3 ». On pense « on suit le fil ».
 
 ---
 
-## Motion par section
+## Motion par phase
 
-### Hero — Incertitude
+### Phase 1 — Incertitude
 Très léger mouvement permanent, comme si l'univers respirait. Les signaux dérivent lentement, la lumière pulse à peine. **Pas plus.**
 
-### Section 1 — *Ruby finds what you're missing* (la plus importante)
+### Phase 2 — Révélation (la plus importante)
 Le mouvement raconte le **focus** :
 ```
 1. Chaos (beaucoup de signaux)
@@ -45,12 +45,11 @@ Le mouvement raconte le **focus** :
 3. Un signal émerge
 4. Tout le reste s'efface
 ```
-Puis ça atterrit (cf. `design.md`) sur le transcript réel.
 
-### Section 2 — *The right signal, at the right moment*
+### Phase 3 — Clarté
 Motion très **précis**. Le temps ralentit autour de l'instant critique, le signal apparaît, le monde redevient normal. Cinématographique, jamais gadget.
 
-### Section 3 — *Until great calls become second nature*
+### Phase 4 — Maîtrise
 Le motion **change de nature** : plus de révélation, de la **fluidité**. Les signaux circulent, les connexions se créent, on ressent l'habitude et le contrôle.
 
 ---
