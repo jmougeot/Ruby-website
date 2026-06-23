@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { U_END, LAKE_Y, EXIT_HOLD, caveReadPose, exitChoreography } from './config'
+import { U_END, LAKE_Y, EXIT_HOLD } from './config'
+import { caveReadPose, exitChoreography } from './caveGeometry'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // KEYNOTE CARDS — panneaux « verre dépoli » premium (façon Apple) posés DANS la
@@ -230,9 +231,9 @@ function CaveBeat({ curve, uRef, exitRef }) {
   const group = useRef()
   const mat = useRef()
   const tex = useCardTexture({
-    kicker: 'Conversation intelligence',
-    title: ['Ruby finds what', 'you’re missing.'],
-    metric: '3.2× more buying signals surfaced',
+    kicker: 'Revelation',
+    title: ['Find what’s holding', 'you back.'],
+    metric: 'Every call analyzed automatically',
   })
   // point MONDE fixe : sur l'axe de visée de la caméra (pose A), à CAVE_CARD_DIST
   // devant elle → centré écran, et assez loin pour tenir entier dans le cadre.
@@ -264,9 +265,9 @@ function ExitBeat({ curve, exitRef }) {
   const group = useRef()
   const mat = useRef()
   const tex = useCardTexture({
-    kicker: 'Real-time guidance',
-    title: ['The right signal,', 'at the right moment.'],
-    metric: 'Guidance mid-call, in under 2 seconds',
+    kicker: 'Clarity',
+    title: ['Know exactly what', 'to improve next.'],
+    metric: 'One coaching priority at a time',
   })
   const pos = useMemo(() => exitChoreography(curve).msg, [curve])
 
@@ -287,25 +288,27 @@ function ExitBeat({ curve, exitRef }) {
   return <CardPlane groupRef={group} matRef={mat} tex={tex} w={W1} h={H1} />
 }
 
-const W3 = 60
+const W3 = 128
 const H3 = W3 / CARD_ASPECT
 
-/** Carte 3 — sur le lac (pose C) : grand panneau suspendu au-dessus de l'eau,
- *  billboard. N'apparaît qu'une fois bien sorti sur le lac (exit→1). */
+/** Carte 3 — AU MILIEU DE LA MONTAGNE : petit panneau posé sur la face de la montagne,
+ *  centré, billboard. N'apparaît qu'une fois bien sorti sur le lac (exit→1). */
 function LakeBeat({ curve, exitRef }) {
   const group = useRef()
   const mat = useRef()
   const tex = useCardTexture({
-    kicker: 'Continuous coaching',
-    title: ['Until excellence', 'becomes a habit.'],
-    metric: '+27% win rate in 90 days',
+    kicker: 'Mastery',
+    title: ['Until improvement', 'becomes a habit.'],
+    metric: 'Continuous reinforcement between calls',
   })
   const pos = useMemo(() => {
     const end = curve.getPointAt(U_END)
     const t = curve.getTangentAt(U_END).clone()
     t.y = 0
     t.normalize()
-    return new THREE.Vector3(end.x, LAKE_Y + 63, end.z).addScaledVector(t, 135)
+    // haut et en avant vers la montagne → posé à mi-hauteur sur sa face, centré
+    // (dans le champ de la caméra qui regarde les cimes une fois sur le lac).
+    return new THREE.Vector3(end.x, LAKE_Y + 75, end.z).addScaledVector(t, 120)
   }, [curve])
 
   useFrame(({ camera, clock }) => {
@@ -323,7 +326,7 @@ function LakeBeat({ curve, exitRef }) {
   return <CardPlane groupRef={group} matRef={mat} tex={tex} w={W3} h={H3} />
 }
 
-/** Les 3 cartes keynote de la traversée. */
+/** Les 3 cartes keynote de la traversée (bout de grotte → puits → lac). */
 export function KeynoteCards({ curve, uRef, exitRef }) {
   return (
     <>

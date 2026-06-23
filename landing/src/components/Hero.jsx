@@ -1,19 +1,25 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { createScrollMagnet } from './cave/scrollChoreography'
-import { U_ARRIVE, U_HOLD, S_CAVE_END, S_MSG_HOLD } from './cave/config'
+import { U_ARRIVE, U_HOLD, S_CAVE_END, S_MSG_HOLD, S_EXIT_HOLD } from './cave/config'
 import RubyLoader from './RubyLoader'
+import VideoControls from './VideoControls'
 
 const CaveScene = lazy(() => import('./CaveScene'))
 const ease = [0.22, 1, 0.36, 1]
 // devant le 1er panneau : Ruby « travaille » → ces statuts défilent en boucle
-const ANALYZE_MSGS = ['Analyse du CRM', 'Analyse des appels', 'Lecture de la base de données']
+const ANALYZE_MSGS = ['Listening to your calls…', 'Finding what’s holding you back…', 'Coaching your next improvement…']
 
 // debug : ?debug=lake (lac) ou ?debug=exit0.18 (remontée figée) fige la scène et
 // masque les calques d'UI (image de repli, voile, texte, loader) → on voit la 3D
 // brute (mise au point du décor / du raccord grotte↔cheminée).
 const DEBUG_SCENE =
   typeof window !== 'undefined' && /debug=(lake|exit)/.test(window.location.search)
+// ?capture : rendu déterministe + tous les calques d'UI masqués → utilisé par les
+// scripts de capture d'écran (scripts/shot-at.mjs) pour shooter la 3D brute à une
+// progression précise du voyage.
+const CAPTURE = typeof window !== 'undefined' && window.location.search.includes('capture')
+const HIDE_UI = DEBUG_SCENE || CAPTURE
 
 /** Si la 3D plante (WebGL absent, etc.), on retombe sur l'image. */
 class Safe3D extends Component {
@@ -43,13 +49,16 @@ export default function Hero() {
   const [greet, setGreet] = useState('off')
   const [onVideo, setOnVideo] = useState(false) // on est sur la vidéo démo → bouton « Continuer »
   const [atPanel1, setAtPanel1] = useState(false) // devant le 1er panneau → statuts d'analyse en boucle
+  const [atLake, setAtLake] = useState(false) // émergé sur le lac (fin) → bulle « Try it for free »
   const [analyzeIdx, setAnalyzeIdx] = useState(0) // statut courant qui défile
   const sectionRef = useRef(null)
   const overlayRef = useRef(null) // bloc titre (haut) — glisse vers le HAUT au scroll
   const inviteRef = useRef(null) // bulle de Ruby (bas) — s'efface au scroll
   const magnetRef = useRef(null) // aimant de scroll (clics « Suis-moi » / « Continuer »)
+  const videoElRef = useRef(null) // <video> de l'écran démo (partagé par DemoScreen → barre de lecture)
   const onVideoRef = useRef(false) // miroir de onVideo lu dans la boucle de scroll (setState only on change)
   const atPanel1Ref = useRef(false) // miroir de atPanel1 lu dans la boucle de scroll
+  const atLakeRef = useRef(false) // miroir de atLake lu dans la boucle de scroll
   const progress = useRef(0) // 0→1 sur toute la hauteur du hero (piloté par le scroll)
 
   // séquence du salut : à l'ouverture de la scène (ready), Ruby dit bonjour, puis
@@ -74,8 +83,23 @@ export default function Hero() {
 
   // clic « Suis-moi » → on glisse jusqu'à la vidéo démo (l'aimant fait le travail).
   const followRuby = () => magnetRef.current?.snapTo(U_ARRIVE)
-  // clic « Continuer » (sur la vidéo) → on poursuit : bris de l'écran + croisière jusqu'au bout de grotte.
-  const continueJourney = () => magnetRef.current?.snapTo(S_CAVE_END)
+  // clic « Break through » (sur la vidéo) → on poursuit : bris de l'écran + croisière
+  // jusqu'au bout de grotte. Snap RAPIDE (vitesse haute + plafond de durée court) → le
+  // bris est punchy, on ne traîne pas dans la transition.
+  const continueJourney = () => magnetRef.current?.snapTo(S_CAVE_END, 1.0, 1500)
+
+  // « Skip intro » → saut INSTANTANÉ au-delà de la cinématique (même méthode que le
+  // header) : un scroll fluide se ferait rattraper par l'aimant. On atterrit sur la
+  // 1re section lisible (#overview), à p≈1 où plus aucun palier n'est armé.
+  const skipIntro = () => {
+    const el = document.getElementById('overview')
+    if (!el) return
+    const html = document.documentElement
+    const prev = html.style.scrollBehavior
+    html.style.scrollBehavior = 'auto'
+    window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY)
+    html.style.scrollBehavior = prev
+  }
 
   // fige le rendu 3D dès que le hero sort de l'écran (gros gain de perf)
   useEffect(() => {
@@ -147,6 +171,12 @@ export default function Hero() {
         atPanel1Ref.current = a
         setAtPanel1(a)
       }
+      // « sur le lac » (fin du voyage) → on propose la bulle « Try it for free »
+      const lk = p > S_EXIT_HOLD
+      if (lk !== atLakeRef.current) {
+        atLakeRef.current = lk
+        setAtLake(lk)
+      }
       // aimant multi-étapes : happe vers le palier suivant (étapes/sens gérés dedans)
       magnet.maybeSnap(p)
     }
@@ -179,7 +209,7 @@ export default function Hero() {
   return (
     // section haute (3D) : la hauteur sert de "course" de scroll pour traverser
     // la grotte. Sans 3D (mobile/reduced-motion), hauteur d'écran normale.
-    <section ref={sectionRef} className={`relative w-full ${use3D ? 'h-[1620vh]' : 'h-svh min-h-[36rem]'}`}>
+    <section id="hero" ref={sectionRef} className={`relative w-full ${use3D ? 'h-[1490vh]' : 'h-svh min-h-[36rem]'}`}>
       {/* tout est épinglé à l'écran pendant qu'on défile la section */}
       <div className="sticky top-0 h-svh w-full overflow-hidden">
         {/* image de repli UNIQUEMENT sans 3D (animations réduites). En 3D, le loader
@@ -203,6 +233,7 @@ export default function Hero() {
                   active={inView && docVisible}
                   scroll={progress}
                   onReady={() => setReady(true)} // ferme le loader + lance le salut de Ruby
+                  videoRef={videoElRef} // partage le <video> démo → barre de lecture
                 />
               </div>
             </Suspense>
@@ -210,10 +241,10 @@ export default function Hero() {
         )}
 
         {/* écran de chargement classe (noir + ruby) tant que la 3D charge */}
-        {use3D && !DEBUG_SCENE && <RubyLoader ready={ready} />}
+        {use3D && !HIDE_UI && <RubyLoader ready={ready} />}
 
         {/* voile : sombre en haut (lisibilité header) + sombre en bas (texte) */}
-        {!DEBUG_SCENE && (
+        {!HIDE_UI && (
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -223,10 +254,25 @@ export default function Hero() {
         />
         )}
 
+        {/* SKIP INTRO — échappatoire toujours visible pendant le voyage (le sales
+            pressé / le visiteur de retour ne reste pas piégé dans les ~19 écrans de
+            cinématique). Disparaît une fois émergé sur le lac (atLake). */}
+        {use3D && !HIDE_UI && (
+          <button
+            type="button"
+            onClick={skipIntro}
+            className={`absolute right-3 top-3 z-20 rounded-full border border-white/15 bg-black/25 px-3 py-1.5 text-[12px] font-medium text-ink/80 backdrop-blur-md transition-opacity duration-500 hover:text-ink md:right-5 md:top-4 ${
+              atLake ? 'pointer-events-none opacity-0' : 'opacity-100'
+            }`}
+          >
+            Skip intro →
+          </button>
+        )}
+
         {/* TITRE — ancré en HAUT, glisse vers le haut et s'efface au scroll */}
         <div
           ref={overlayRef}
-          style={DEBUG_SCENE ? { display: 'none' } : undefined}
+          style={HIDE_UI ? { display: 'none' } : undefined}
           className="absolute inset-x-0 top-0 z-10 px-6 pt-28 md:pt-32"
         >
           <motion.div
@@ -235,31 +281,26 @@ export default function Hero() {
             animate="show"
             className="mx-auto flex max-w-3xl flex-col items-center text-center"
           >
-            <motion.span
-              variants={item}
-              className="mb-5 text-xs font-medium uppercase tracking-[0.22em] text-muted"
-            >
-              Sales intelligence
-            </motion.span>
-
             <motion.h1
               variants={item}
               className="max-w-3xl text-balance text-[clamp(2.5rem,6.5vw,4.75rem)] font-medium leading-[1.05] tracking-tight"
             >
-              Become an AI-augmented sales rep.
+              Become the sales rep you know you can be.
             </motion.h1>
 
-            <motion.p variants={item} className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-              Ruby listens to every conversation, finds what you&rsquo;re missing, and helps you
-              get better after every call.
+            {/* unique ligne évocatrice, lue À L'ARRÊT (en haut) → s'efface au scroll
+                avec tout le bloc titre (overlayRef). La narration complète vit dans le
+                bloc « pont » sous le hero (App.jsx). */}
+            <motion.p variants={item} className="mt-6 max-w-md text-base leading-relaxed text-muted">
+              Automatic feedback. Continuous improvement. More deals.
             </motion.p>
 
             <motion.div variants={item} className="mt-9">
               <a
-                href="#demo"
+                href="https://app.rubysignal.com"
                 className="rounded-full bg-ink px-7 py-3.5 text-[15px] font-medium text-night shadow-[0_8px_30px_-8px_rgba(0,0,0,0.5)] transition-opacity hover:opacity-90"
               >
-                Get Ruby
+                Try it for free
               </a>
             </motion.div>
           </motion.div>
@@ -267,7 +308,7 @@ export default function Hero() {
 
         {/* BULLE DE RUBY — ancrée en BAS, près du rubis 3D. Dit « Bonjour » puis
             propose « Suis-moi » (cliquable → glisse vers la vidéo démo). */}
-        {use3D && !DEBUG_SCENE && (
+        {use3D && !HIDE_UI && (
           <div
             ref={inviteRef}
             className="absolute inset-x-0 bottom-0 z-10 flex justify-center px-6 pb-12 md:pb-14"
@@ -285,33 +326,37 @@ export default function Hero() {
                   <span className="pill-orb-spin" />
                 </span>
               )}
-              {greet === 'follow' ? 'Suis-moi ↓' : 'Bonjour, je suis Ruby'}
+              {greet === 'follow' ? 'Lost in the dark? Follow me ↓' : 'Hi — I’m Ruby'}
             </button>
           </div>
         )}
 
         {/* SUR LA VIDÉO — le même bouton, version « Continuer » : poursuit le voyage
             (bris de l'écran + croisière jusqu'au bout de grotte). */}
-        {use3D && !DEBUG_SCENE && (
+        {use3D && !HIDE_UI && (
           <div
-            className={`absolute inset-x-0 bottom-0 z-10 flex justify-center px-6 pb-12 transition-opacity duration-500 md:pb-14 ${
+            className={`absolute inset-x-0 bottom-0 z-10 flex flex-row flex-wrap items-center justify-center gap-3 px-6 pb-12 transition-opacity duration-500 md:pb-14 ${
               onVideo ? 'opacity-100' : 'pointer-events-none opacity-0'
             }`}
           >
             {/* rendu SEULEMENT sur la vidéo → ne capte jamais le clic de « Suis-moi » */}
             {onVideo && (
-              <button type="button" onClick={continueJourney} className="speech-pill is-in is-follow">
-                <span className="pill-orb" aria-hidden="true">
-                  <span className="pill-orb-spin" />
-                </span>
-                Continuer ↓
-              </button>
+              <>
+                {/* barre de lecture (play/pause + seek) À CÔTÉ du bouton */}
+                <VideoControls videoRef={videoElRef} visible={onVideo} />
+                <button type="button" onClick={continueJourney} className="speech-pill is-in is-follow shrink-0">
+                  <span className="pill-orb" aria-hidden="true">
+                    <span className="pill-orb-spin" />
+                  </span>
+                  Break through ↓
+                </button>
+              </>
             )}
           </div>
         )}
 
         {/* DEVANT LE 1er PANNEAU — Ruby « travaille » : statuts d'analyse en boucle. */}
-        {use3D && !DEBUG_SCENE && (
+        {use3D && !HIDE_UI && (
           <div
             className={`absolute inset-x-0 bottom-0 z-10 flex justify-center px-6 pb-12 transition-opacity duration-500 md:pb-14 ${
               atPanel1 ? 'opacity-100' : 'pointer-events-none opacity-0'
@@ -325,6 +370,23 @@ export default function Hero() {
                 {ANALYZE_MSGS[analyzeIdx]}
               </span>
             </span>
+          </div>
+        )}
+
+        {/* SUR LE LAC (fin) — petite bulle « Try it for free » : Ruby a mené jusqu'à
+            la lumière, la bulle envoie passer à l'action (→ app.rubysignal.com). */}
+        {use3D && !HIDE_UI && (
+          <div
+            className={`absolute inset-x-0 bottom-0 z-10 flex justify-center px-6 pb-12 transition-opacity duration-500 md:pb-14 ${
+              atLake ? 'opacity-100' : 'pointer-events-none opacity-0'
+            }`}
+          >
+            <a href="https://app.rubysignal.com" className="speech-pill is-in is-follow">
+              <span className="pill-orb" aria-hidden="true">
+                <span className="pill-orb-spin" />
+              </span>
+              Try it for free →
+            </a>
           </div>
         )}
       </div>

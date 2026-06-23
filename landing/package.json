@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "compress:models": "bash ./scripts/compress-models.sh",
+    "compress:model": "gltf-transform optimize public/models/input.glb public/models/input.draco.glb --compress draco --texture-compress webp --texture-size 2048 --prune --join --weld"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -19,8 +21,11 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "@gltf-transform/cli": "^4.4.0",
     "@tailwindcss/vite": "^4.3.1",
     "@vitejs/plugin-react": "^6.0.2",
+    "draco3dgltf": "^1.5.7",
+    "puppeteer": "^25.1.0",
     "tailwindcss": "^4.3.1",
     "vite": "^8.0.16"
   }

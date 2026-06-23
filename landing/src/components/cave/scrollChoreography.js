@@ -12,6 +12,7 @@
 //   grotte) → montée dans le puits → PALIER msg 2 → émergence sur le lac → tampon.
 // ─────────────────────────────────────────────────────────────────────────────
 import {
+  U_START,
   U_STOP,
   U_END,
   U_ARRIVE,
@@ -38,8 +39,9 @@ export function sampleTimeline(p) {
   let brk = 0
   if (p <= U_ARRIVE) {
     // trajet : profil TRAPÈZE → départ doux, vitesse constante, arrivée sur la
-    // vidéo avec vitesse → 0 (raccord net avec la pause, sans à-coup)
-    u = U_STOP * trapezoidEase(p / U_ARRIVE)
+    // vidéo avec vitesse → 0 (raccord net avec la pause, sans à-coup).
+    // Départ à U_START (et non 0) → trajet d'approche raccourci, l'arrivée (U_STOP) inchangée.
+    u = U_START + (U_STOP - U_START) * trapezoidEase(p / U_ARRIVE)
   } else if (p <= U_HOLD) {
     // PAUSE vidéo : on est sur la vidéo, Ruby figé à l'écran, rien ne casse
     u = U_STOP
@@ -48,10 +50,12 @@ export function sampleTimeline(p) {
     u = U_STOP
     brk = smooth01((p - U_HOLD) / (U_BREAK - U_HOLD))
   } else if (p <= S_CAVE_END) {
-    // CROISIÈRE : profil TRAPÈZE → repart en douceur depuis le bris, vitesse
-    // CONSTANTE sur toute la longueur, arrêt doux au bout de grotte.
+    // CROISIÈRE : profil TRAPÈZE avec kIn = 0 → PLEINE VITESSE dès le bris (plus de
+    // rampe d'accélération lente : la caméra colle à la vitesse de scroll tout de
+    // suite ; le lissage dampN absorbe le à-coup). kOut = 0.18 → arrêt doux au bout
+    // de grotte (la fin que tu aimes).
     brk = 1
-    u = U_STOP + trapezoidEase((p - U_BREAK) / (S_CAVE_END - U_BREAK)) * (U_END - U_STOP)
+    u = U_STOP + trapezoidEase((p - U_BREAK) / (S_CAVE_END - U_BREAK), 0, 0.18) * (U_END - U_STOP)
   } else {
     // bout de grotte atteint : figé sur la courbe, la suite est VERTICALE (sortie)
     brk = 1
@@ -99,9 +103,10 @@ export const SNAP_STAGES = [
 // au lieu d'une durée arbitraire. Bornes LARGES → c'est bien la vélocité du user
 // qui pilote (sauf cas extrêmes).
 const SNAP_MIN_MS = 200 // jamais un saut instantané
-const SNAP_MAX_MS = 2600 // approche au ralenti → se résout quand même
+const SNAP_MAX_MS = 3800 // approche au ralenti → la longue croisière RESPIRE (était 2600,
+// catapultait le visiteur sur les grandes traversées → on profite de l'immersion)
 // >1 = l'aimant va PLUS vite que le swipe (emmène franchement), <1 = plus posé.
-const SNAP_SPEED_GAIN = 0.5
+const SNAP_SPEED_GAIN = 0.42 // un peu plus posé (était 0.5)
 // MAINTIEN APRÈS SNAP : une fois la pose atteinte, on la PIN (scrollTo chaque frame)
 // tant que l'utilisateur n'a pas relâché — c.-à-d. plus aucun input wheel/touch
 // depuis RELEASE_IDLE_MS. Sinon l'INERTIE d'un 2e swipe (ou d'un fling) traverse le
@@ -155,7 +160,7 @@ export function createScrollMagnet({ getTotal, getOffsetTop }) {
     lastT = performance.now()
   }
 
-  const runSnap = (snapTo) => {
+  const runSnap = (snapTo, maxMs = SNAP_MAX_MS) => {
     const total = getTotal()
     if (total <= 0) return
     const targetY = getOffsetTop() + snapTo * total
@@ -167,8 +172,10 @@ export function createScrollMagnet({ getTotal, getOffsetTop }) {
     }
     // durMs = distance / vitesse (px / (px/ms) = ms) ; mouvement LINÉAIRE → pas de
     // décélération en fin de course, on prolonge le geste tel quel jusqu'à la cible.
+    // `maxMs` plafonne la durée : par défaut SNAP_MAX_MS (croisière qui respire), mais
+    // un appel programmatique (ex. « Break through ») peut le baisser pour aller vite.
     const speed = Math.max(Math.abs(vel) * SNAP_SPEED_GAIN, 0.05) // px/ms (évite /0)
-    const durMs = Math.min(SNAP_MAX_MS, Math.max(SNAP_MIN_MS, Math.abs(dist) / speed))
+    const durMs = Math.min(maxMs, Math.max(SNAP_MIN_MS, Math.abs(dist) / speed))
     const t0 = performance.now()
     snapping = true
     const step = () => {
@@ -215,11 +222,11 @@ export function createScrollMagnet({ getTotal, getOffsetTop }) {
     /** Déclenche PROGRAMMATIQUEMENT le glissement vers une progression cible (ex. :
      *  clic « Suis-moi » → on glisse jusqu'à la vidéo démo). Réutilise runSnap (donc
      *  aussi le maintien anti-inertie). `speed` en px/ms = vitesse du glissement. */
-    snapTo(targetP, speed = 0.45) {
+    snapTo(targetP, speed = 0.45, maxMs = SNAP_MAX_MS) {
       if (snapping || holding) return
       vel = Math.max(speed, 0.05)
       snapDoneTarget = null
-      runSnap(targetP)
+      runSnap(targetP, maxMs)
     },
     /** déclenche l'aimant si on entre vers l'avant dans la plage d'une étape */
     maybeSnap(p) {

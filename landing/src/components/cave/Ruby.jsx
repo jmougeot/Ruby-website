@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Trail } from '@react-three/drei'
 import * as THREE from 'three'
-import { WATER_Y, LEAD, U_SCREENS, smooth01, screenTransform, CAM, damp3, dampN, exitChoreography } from './config'
+import { WATER_Y, LEAD, U_SCREENS, smooth01, CAM } from './config'
+import { screenTransform, damp3, dampN, exitChoreography } from './caveGeometry'
 import { makeGlowTex, makeRingTex } from './textures'
 
 /** Gemme multi-couches :
@@ -192,9 +193,16 @@ export function RubyRig({ curve, uRef, exitRef }) {
     tmp.rubyGoal.copy(camera.position).addScaledVector(tmp.forward, CAM.rubyAhead)
     // posé bas dans le cadre mais REMONTÉ au départ (ne touche pas la bulle « Suis-moi »),
     // puis redescend à sa hauteur de croisière quand on commence à avancer.
-    tmp.rubyGoal.y += -CAM.rubyDrop + intro * 1.5 + Math.sin(e * 0.7) * 0.5 // posé bas + respiration
-    // BRIS : le rubis crève l'écran (cible = centre de l'écran)
-    tmp.rubyGoal.lerp(SCREEN.center, eFocus)
+    tmp.rubyGoal.y += -CAM.rubyDrop + intro * 0.01 + Math.sin(e * 0.7) * 0.5 // posé bas + respiration
+    // BRIS : PAS de lerp vers SCREEN.center. Le rubis est déjà ≈ au centre de l'écran
+    // quand la caméra plonge (camGoal=fill, 8u devant l'écran, +rubyAhead=7.5u → pile
+    // dessus) ET il est masqué (shown→0) tant que eFocus≈1 → ce lerp n'agissait QUE
+    // pendant le DÉVOILEMENT (eFocus 0.9→0). Or SCREEN.center et l'ancre de croisière
+    // sont à la MÊME profondeur (~8u) mais dans des directions différentes : lerper la
+    // position monde entre les deux coupe une CORDE qui passe près de la caméra → le
+    // rubis plongeait vers le spectateur (profondeur 8→3.9) puis ressortait (→7.8) =
+    // le « il revient puis il repart ». Ancré purement devant la caméra, sa profondeur
+    // reste ~constante (7.5→7.8) : il crève l'écran et MÈNE vers l'avant, sans yo-yo.
     // SORTIE : le rubis MÈNE la montée (pose B, devant la caméra) puis se pose sur
     // le lac (pose C) — mêmes 2 segments que la caméra.
     if (exr > 0.0001) {

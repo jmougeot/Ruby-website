@@ -202,8 +202,17 @@ export default function RubyLoader({ ready = false }) {
               Ruby
             </span>
             <span className="mt-2.5 text-[10px] uppercase tracking-[0.28em] text-white/30">
-              Sales intelligence
+              Continuous Sales Coaching
             </span>
+
+            {/* l'impatient / le visiteur de retour peut filer vers l'app sans
+                attendre la fin du chargement de la 3D. */}
+            <a
+              href="https://app.rubysignal.com"
+              className="mt-8 rounded-full border border-white/15 px-4 py-2 text-[12px] font-medium text-white/70 transition-colors hover:border-white/30 hover:text-white"
+            >
+              Try it for free →
+            </a>
           </motion.div>
         </motion.div>
       )}

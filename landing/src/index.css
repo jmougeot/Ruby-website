@@ -416,6 +416,39 @@ body {
 }
 
 /* ===========================================================
+   Header « liquid glass » — île flottante DÉTACHÉE du haut.
+   Verre translucide flouté (même langage que .speech-pill / l'orbe).
+   Fixe → le décor 3D défile DERRIÈRE et se floute à travers la barre
+   (l'effet « liquid glass » Apple n'existe que parce qu'elle reste posée).
+   =========================================================== */
+.glass-nav {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03));
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 12px 34px -16px rgba(0, 0, 0, 0.55),  /* ombre portée fine (la barre flotte) */
+    0 1px 6px -4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),  /* reflet spéculaire en haut = arête de verre */
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  /* entrée : la barre « tombe » depuis le bord haut puis se pose */
+  animation: glass-drop 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+.glass-nav:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 14px 38px -16px rgba(0, 0, 0, 0.58),
+    0 1px 6px -4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+@keyframes glass-drop {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===========================================================
    Accessibilité — on coupe le motion non essentiel
    (cf. charte_graphique.md → Accessibilité)
    =========================================================== */

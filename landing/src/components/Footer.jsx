@@ -6,8 +6,9 @@ export default function Footer() {
           <span className="h-2 w-2 rounded-full bg-ruby" /> Ruby
         </span>
         <nav className="flex gap-6">
-          <a href="#" className="transition-colors hover:text-night">Privacy</a>
-          <a href="#" className="transition-colors hover:text-night">Terms</a>
+          <a href="/blog/" className="transition-colors hover:text-night">Blog</a>
+          <a href="/privacy.html" className="transition-colors hover:text-night">Privacy</a>
+          <a href="/terms.html" className="transition-colors hover:text-night">Terms</a>
           <a href="mailto:hello@getruby.io" className="transition-colors hover:text-night">Contact</a>
         </nav>
         <span className="text-night/40">© 2026 Ruby</span>

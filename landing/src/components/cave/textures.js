@@ -44,9 +44,16 @@ export function makeNormalTex(size, octaves, baseFreq, strength) {
   return tex
 }
 
-/** Normal map de ROCHE : bruit "ridged" (crêtes/fissures nettes) + fbm,
- *  plus réaliste qu'un simple bruit lisse. */
-export function makeRockNormalTex(size = 768) {
+// Cache des DONNÉES (pixels) de la normal map de roche, par taille. Le calcul du bruit
+// (≈14 octaves × size² → le plus gros coût d'init de la scène, ~0,6 s à 768) est
+// IDENTIQUE pour les 2 usages (parois de grotte + montagnes) : on ne le fait qu'UNE
+// fois et on partage le buffer. Chaque usage garde sa propre DataTexture (donc son
+// `repeat`/`anisotropy` indépendants) — seules les données sont mutualisées.
+const _rockData = new Map() // size -> Uint8Array
+
+function computeRockNormalData(size) {
+  const cached = _rockData.get(size)
+  if (cached) return cached
   const n4 = createNoise4D()
   const h = new Float32Array(size * size)
   for (let y = 0; y < size; y++) {
@@ -93,7 +100,15 @@ export function makeRockNormalTex(size = 768) {
       data[i + 3] = 255
     }
   }
-  const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)
+  _rockData.set(size, data)
+  return data
+}
+
+/** Normal map de ROCHE : bruit "ridged" (crêtes/fissures nettes) + fbm, plus réaliste
+ *  qu'un simple bruit lisse. Les DONNÉES sont mises en cache et partagées entre appels
+ *  de même taille (cf. computeRockNormalData) → le bruit n'est calculé qu'une fois. */
+export function makeRockNormalTex(size = 768) {
+  const tex = new THREE.DataTexture(computeRockNormalData(size), size, size, THREE.RGBAFormat)
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping
   tex.magFilter = THREE.LinearFilter
   tex.minFilter = THREE.LinearMipmapLinearFilter

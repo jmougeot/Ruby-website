@@ -1,19 +1,51 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
-import { useVideoTexture } from '@react-three/drei'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { screenTransform } from './config'
+import { screenTransform } from './caveGeometry'
 
 const SCREEN_W = 24
 const SCREEN_H = 13.5
 
 /** Grand écran démo en GRILLE DE FRAGMENTS : solide à l'approche (apparaît en
  *  fondu), puis chaque morceau s'envole quand le rubis le brise. */
-export function DemoScreens({ curve, uRef, breakRef }) {
-  const tex = useVideoTexture('/ruby-hero.mp4', { muted: true, loop: true, start: true })
+export function DemoScreens({ curve, uRef, breakRef, videoRef }) {
+  // VideoTexture MAISON (remplace drei/useVideoTexture → retire la dépendance hls.js,
+  // inutile pour un MP4 simple). Bonus perf : on NE suspend PLUS sur le chargement de
+  // la vidéo, donc la 1re image de la grotte n'attend plus le buffering de demo.mp4.
+  // La vidéo reste sur sa 1re frame (pas d'autoplay) ; on la LANCE nous-mêmes quand
+  // l'écran devient plein cadre (cf. useFrame). loop=false → elle joue une fois.
+  const gl = useThree((s) => s.gl)
+  const tex = useMemo(() => {
+    const video = Object.assign(document.createElement('video'), {
+      src: '/demo.mp4',
+      crossOrigin: 'anonymous',
+      muted: true,
+      loop: false,
+      playsInline: true,
+      preload: 'auto',
+    })
+    const t = new THREE.VideoTexture(video)
+    t.colorSpace = gl.outputColorSpace // couleurs identiques à drei (= sortie du renderer)
+    return t
+  }, [gl])
+
+  // libère la texture + l'élément vidéo au démontage
+  useEffect(
+    () => () => {
+      const v = tex.image
+      tex.dispose()
+      if (v) {
+        v.pause?.()
+        v.removeAttribute('src')
+        v.load?.()
+      }
+    },
+    [tex],
+  )
   const group = useRef()
   const fragRefs = useRef([])
-  const playing = useRef(true) // état lecture vidéo (évite de spammer play/pause)
+  const playing = useRef(false) // état lecture vidéo (évite de spammer play/pause)
+  const started = useRef(false) // a déjà (re)démarré depuis 0 pour cette entrée plein écran
 
   const place = useMemo(() => screenTransform(curve), [curve])
 
@@ -58,6 +90,22 @@ export function DemoScreens({ curve, uRef, breakRef }) {
     group.current?.lookAt(place.center.clone().addScaledVector(place.tangent, 12))
   }, [place])
 
+  // l'écran est vu « par l'arrière » (plan orienté le long du tunnel) → l'image
+  // arrivait EN MIROIR. On retourne la texture horizontalement (u → 1-u) pour la
+  // remettre à l'endroit, indépendamment de la grille de fragments.
+  useEffect(() => {
+    tex.wrapS = THREE.RepeatWrapping
+    tex.repeat.x = -1
+    tex.offset.x = 1
+    tex.needsUpdate = true
+  }, [tex])
+
+  // partage l'élément <video> (caché dans la texture) avec l'overlay DOM → barre de
+  // lecture / play-pause (VideoControls). tex.image = HTMLVideoElement une fois chargé.
+  useEffect(() => {
+    if (videoRef) videoRef.current = tex.image ?? null
+  }, [tex, videoRef])
+
   useFrame(() => {
     // fade TARDIF : invisible de loin (on voit la salle), apparaît à l'arrivée
     const a = THREE.MathUtils.clamp((uRef.current - 0.085) / 0.05, 0, 1)
@@ -66,15 +114,25 @@ export function DemoScreens({ curve, uRef, breakRef }) {
     const brk = THREE.MathUtils.clamp(breakRef.current, 0, 1)
     const e = brk // déplacement proportionnel au scroll (pas d'accélération)
 
-    // PERF : la vidéo ne DÉCODE que quand l'écran est visible (de l'approche
-    // jusqu'au bris complet). Avant l'arrivée et une fois l'écran brisé, on met en
-    // pause → plus de décodage mp4 continu pendant tout le reste du parcours.
-    const shouldPlay = a > 0.001 && brk < 0.999
+    // PLEIN ÉCRAN : la caméra a plongé face à l'écran (même seuil `focus` que
+    // Ruby.jsx). La vidéo NE SE LANCE qu'à ce moment-là — et DEPUIS LE DÉBUT — au lieu
+    // de tourner en boucle en fond depuis l'arrivée. On la coupe une fois l'écran brisé.
+    const focus = THREE.MathUtils.clamp((uRef.current - 0.09) / 0.045, 0, 1)
+    const atFull = focus > 0.98
+    if (!atFull) started.current = false // sorti du plein cadre (retour arrière) → réarme
+    const shouldPlay = atFull && brk < 0.999
     const vid = tex.image
     if (vid && playing.current !== shouldPlay) {
       playing.current = shouldPlay
-      if (shouldPlay) vid.play?.().catch(() => {})
-      else vid.pause?.()
+      if (shouldPlay) {
+        if (!started.current) {
+          started.current = true
+          try { vid.currentTime = 0 } catch { /* pas encore seekable */ }
+        }
+        vid.play?.().catch(() => {})
+      } else {
+        vid.pause?.()
+      }
     }
 
     frags.forEach((f, i) => {

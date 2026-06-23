@@ -1,19 +1,27 @@
-import { Suspense, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Environment, Lightformer, PerformanceMonitor, useProgress } from '@react-three/drei'
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import { createNoise3D } from 'simplex-noise'
-import { useTunnelCurve, dampN, CAM, U_END } from './cave/config'
+import { CAM, U_START, U_END } from './cave/config'
+import { useTunnelCurve, dampN } from './cave/caveGeometry'
 import { sampleTimeline } from './cave/scrollChoreography'
 import { makeRockNormalTex, makeRoughnessTex } from './cave/textures'
 import { TunnelWalls, Water } from './cave/Terrain'
-import { Cascade } from './cave/Cascade'
 import { EndLight } from './cave/EndLight'
 import { RubyRig } from './cave/Ruby'
 import { DemoScreens } from './cave/DemoScreen'
 import { KeynoteCards } from './cave/KeynoteCards'
 import { LakeScene } from './cave/LakeScene'
 import { Atmosphere } from './cave/Atmosphere'
+import { CAPTURE, getCaptureProgress, setCaptureReady } from './cave/capture'
+
+// (plus de décodeur Draco : le seul modèle, PineTree.glb, est livré non compressé →
+//  zéro aller-retour CDN gstatic au 1er rendu.)
+
+// Post-traitement (Bloom + Vignette) en CHUNK LAZY, monté après la 1re image (cf.
+// showPost) → ~55 Ko gzip hors du chunk critique de la scène, et la compilation des
+// shaders de Bloom ne retarde plus le 1er rendu.
+const CavePost = lazy(() => import('./cave/CavePost'))
 
 /** Position le long de la courbe = UNIQUEMENT le scroll (plus d'avance auto).
  *  breakRef = bris de l'écran (0→1), piloté par le scroll lui aussi.
@@ -26,8 +34,25 @@ const DEBUG_EXIT = (() => {
   const m = window.location.search.match(/debug=exit([0-9.]+)/)
   return m ? parseFloat(m[1]) : null
 })()
+// ?perf : journalise le temps (depuis l'ouverture de la page) aux étapes clés de l'init
+// 3D → permet de voir OÙ partent les secondes de chargement (génération textures,
+// création du contexte WebGL, 1re image prête). Inactif sans le flag.
+const PERF = typeof window !== 'undefined' && window.location.search.includes('perf')
+const perfMark = (label) => {
+  if (PERF) console.log(`[perf] +${performance.now().toFixed(0)}ms — ${label}`)
+}
+
 function ScrollDriver({ scroll, uRef, exitRef, breakRef }) {
   useFrame((_, delta) => {
+    if (CAPTURE) {
+      // mode capture : progression imposée par le script, AUCUN lissage → la même
+      // valeur de p produit toujours exactement la même image (rendu déterministe).
+      const { u, brk, exit } = sampleTimeline(getCaptureProgress())
+      uRef.current = u
+      breakRef.current = brk
+      exitRef.current = exit
+      return
+    }
     if (DEBUG_LAKE) {
       uRef.current = U_END
       exitRef.current = 1
@@ -73,16 +98,17 @@ function FirstFrame({ onReady }) {
     framesAfterLoad.current += 1
     if (framesAfterLoad.current >= 2) {
       fired.current = true
+      if (CAPTURE) setCaptureReady() // débloque le script de capture
       onReady?.()
     }
   })
   return null
 }
 
-export default function CaveScene({ active = true, scroll, onReady }) {
+export default function CaveScene({ active = true, scroll, onReady, videoRef }) {
   const noise = useMemo(() => createNoise3D(), [])
   const curve = useTunnelCurve()
-  const uRef = useRef(DEBUG_LAKE ? U_END : 0)
+  const uRef = useRef(DEBUG_LAKE ? U_END : U_START) // départ décalé dans la grotte (pas u=0)
   const exitRef = useRef(DEBUG_LAKE ? 1 : 0) // 0→1 : remontée hors de la grotte vers le lac
   const breakRef = useRef(DEBUG_LAKE ? 1 : 0) // 0→1 : bris de l'écran vidéo (piloté par le scroll)
   // DPR adaptatif : NET par défaut (jusqu'à 2× sur écran HiDPI → texte des panneaux
@@ -90,24 +116,42 @@ export default function CaveScene({ active = true, scroll, onReady }) {
   // Plafond 2 = borne le coût GPU ; sur écran non-Retina HI_DPR vaut 1 → aucun surcoût.
   const HI_DPR = Math.min((typeof window !== 'undefined' && window.devicePixelRatio) || 1, 2)
   const [dpr, setDpr] = useState(HI_DPR)
+  // post-traitement différé : monté seulement APRÈS la 1re image. En capture/debug on
+  // le veut tout de suite (rendu déterministe / cadrage fidèle du décor).
+  const [showPost, setShowPost] = useState(CAPTURE || DEBUG_LAKE || DEBUG_EXIT != null)
+  // ferme le loader (onReady) PUIS monte Bloom à la frame suivante → le 1er rendu ne
+  // paie pas la compilation des shaders ; le glow « pop » juste après.
+  const handleReady = () => {
+    perfMark('READY — 1re image prête, le loader se ferme')
+    onReady?.()
+    if (!showPost) requestAnimationFrame(() => setShowPost(true))
+  }
   const rockNormal = useMemo(() => {
-    const t = makeRockNormalTex(768)
+    const t0 = performance.now()
+    // 512 plutôt que 768 : la normale est répétée 34×7 → chaque tuile est minuscule à
+    // l'écran, la perte de finesse est imperceptible, mais le calcul du bruit (≈14
+    // octaves × size²) chute de ~55 %. Coût n°1 de l'init de la scène.
+    const t = makeRockNormalTex(512)
     t.repeat.set(34, 7)
+    perfMark(`rockNormal(512) généré (${(performance.now() - t0).toFixed(0)}ms)`)
     return t
   }, [])
   const rockRough = useMemo(() => {
+    const t0 = performance.now()
     const t = makeRoughnessTex(512)
     t.anisotropy = 8
     t.repeat.set(18, 4)
+    perfMark(`rockRough(512) généré (${(performance.now() - t0).toFixed(0)}ms)`)
     return t
   }, [])
 
   return (
     <Canvas
-      frameloop={active || DEBUG_LAKE || DEBUG_EXIT != null ? 'always' : 'never'}
+      frameloop={active || DEBUG_LAKE || DEBUG_EXIT != null || CAPTURE ? 'always' : 'never'}
       camera={{ position: [0, 0, 0], fov: 80, far: 3200 }}
-      gl={{ antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: DEBUG_LAKE || DEBUG_EXIT != null }}
+      gl={{ antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: DEBUG_LAKE || DEBUG_EXIT != null || CAPTURE }}
       dpr={dpr}
+      onCreated={() => perfMark('contexte WebGL créé')}
     >
       <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(HI_DPR)} />
       <color attach="background" args={['#060a10']} />
@@ -119,14 +163,14 @@ export default function CaveScene({ active = true, scroll, onReady }) {
       <ambientLight color="#16252f" intensity={0.22} />
       <hemisphereLight args={['#132834', '#05060c', 0.22]} />
 
-      <FirstFrame onReady={onReady} />
+      <FirstFrame onReady={handleReady} />
       <ScrollDriver scroll={scroll} uRef={uRef} exitRef={exitRef} breakRef={breakRef} />
       <Atmosphere exitRef={exitRef} />
       <TunnelWalls curve={curve} noise={noise} rockNormal={rockNormal} rockRough={rockRough} />
       <Water />
       <LakeScene curve={curve} noise={noise} exitRef={exitRef} />
       <Suspense fallback={null}>
-        <DemoScreens curve={curve} uRef={uRef} breakRef={breakRef} />
+        <DemoScreens curve={curve} uRef={uRef} breakRef={breakRef} videoRef={videoRef} />
       </Suspense>
       {/* messages = cartes « verre dépoli » 3D premium (texte canvas net) */}
       <KeynoteCards curve={curve} uRef={uRef} exitRef={exitRef} />
@@ -139,15 +183,8 @@ export default function CaveScene({ active = true, scroll, onReady }) {
         <Lightformer form="rect" intensity={1.1} color="#cfe6f0" position={[0, 6, -4]} scale={[14, 2, 1]} />
       </Environment>
 
-      <EffectComposer multisampling={4}>
-        {/* PERF : sans mipmapBlur → flou en 1 passe au lieu de la pyramide
-            downscale/upscale (plusieurs passes plein écran). Halo très légèrement
-            plus serré, quasi imperceptible sur fond sombre. */}
-        {/* seuil relevé (0.5→0.7) : le texte blanc des panneaux bloome moins → bords
-            nets, mais les vraies sources lumineuses (rubis, lumière du fond) bloomment. */}
-        <Bloom intensity={0.7} luminanceThreshold={0.7} luminanceSmoothing={0.9} />
-        <Vignette eskil={false} offset={0.2} darkness={0.5} />
-      </EffectComposer>
+      {/* post-traitement (Bloom + Vignette) : chunk lazy, monté après la 1re image */}
+      <Suspense fallback={null}>{showPost && <CavePost />}</Suspense>
     </Canvas>
   )
 }

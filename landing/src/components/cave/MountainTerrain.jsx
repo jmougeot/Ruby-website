@@ -294,7 +294,9 @@ export function MountainTerrain({ center, noise, baseY, sunDir }) {
   // normal map de ROCHE (ridged) → relief de surface fin (strates, fissures) qui
   // accroche la lumière rasante → la montagne paraît rocheuse et non lisse.
   const rockNormal = useMemo(() => {
-    const t = makeRockNormalTex(768)
+    // 512 (et NON 768) : DOIT matcher la taille demandée par CaveScene → même clé de
+    // cache, le bruit n'est calculé qu'une fois et partagé entre grotte et montagnes.
+    const t = makeRockNormalTex(512)
     t.repeat.set(1, 1) // échelle portée par le triplanar (coords monde)
     return t
   }, [])
@@ -368,6 +370,8 @@ normal = normalize((viewMatrix * vec4(wn, 0.0)).xyz);`,
 
 // modèle de sapin libre (CC0, Quaternius via Poly Pizza) — bien plus réaliste que
 // des cônes. 1 mesh / 2 primitives (bois + feuillage), node scalé ×100 à la source.
+// GLB NON compressé : un seul petit modèle (~93 Ko) → pas la peine de charger le
+// décodeur Draco (wasm depuis le CDN gstatic) au 1er rendu juste pour lui.
 const TREE_URL = '/models/PineTree.glb'
 
 /** Forêt instanciée à partir du VRAI modèle 3D : on extrait chaque primitive du

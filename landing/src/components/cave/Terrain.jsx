@@ -1,7 +1,8 @@
 import { useCallback, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { TUBE_R, WATER_Y, U_SCREENS, U_END, exitPath } from './config'
+import { TUBE_R, WATER_Y, U_SCREENS, U_END } from './config'
+import { exitPath } from './caveGeometry'
 import { makeNormalTex } from './textures'
 
 /** Parois rocheuses — UN SEUL tunnel, fait d'UNE SEULE courbe : il suit le TRAJET

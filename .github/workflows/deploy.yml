@@ -25,13 +25,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      - name: Install dependencies
+      # 1) Blog + pages historiques (Eleventy) → _site/  (génère un index.html qui
+      #    sera ÉCRASÉ par la landing à l'étape 3 ; /blog/, /privacy.html, CNAME… restent)
+      - name: Install Eleventy deps
         run: npm ci
-
-      - name: Build with Eleventy
+      - name: Build blog (Eleventy)
         run: npm run build
+
+      # 2) Landing page (React/Vite) → landing/dist/
+      - name: Install landing deps
+        run: npm ci
+        working-directory: landing
+      - name: Build landing (Vite)
+        run: npm run build
+        working-directory: landing
+
+      # 3) Fusion : la landing devient la RACINE du site (/), le blog reste en /blog/.
+      #    `dist/.` copie le CONTENU (dont index.html) dans _site/ ; cp écrase l'ancien
+      #    index.html. Les assets Vite (hashés, dans /assets/) cohabitent avec ceux du
+      #    blog (/assets/images, /assets/blog) sans collision.
+      - name: Merge landing into site root
+        run: cp -R landing/dist/. _site/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
