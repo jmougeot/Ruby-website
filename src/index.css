@@ -2,7 +2,7 @@
 
 /* ===========================================================
    Design tokens — Ruby Charte Graphique v2
-   (cf. charte_graphique.md → Palette)
+   (cf. docs/charte_graphique.md → Palette)
    =========================================================== */
 @theme {
   --color-night: #0b0b0d;     /* fond principal      */
@@ -450,7 +450,7 @@ body {
 
 /* ===========================================================
    Accessibilité — on coupe le motion non essentiel
-   (cf. charte_graphique.md → Accessibilité)
+   (cf. docs/charte_graphique.md → Accessibilité)
    =========================================================== */
 @media (prefers-reduced-motion: reduce) {
   *,
