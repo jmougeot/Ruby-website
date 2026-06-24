@@ -83,6 +83,9 @@ write(
 // 5) Articles /blog/<slug>/
 for (const post of posts) {
   const related = posts.filter((p) => p.url !== post.url).slice(0, 3)
+  // Carte sociale raster dédiée (cf. scripts/build-og-articles.mjs) : l'illustration
+  // d'article est en .svg, non rendue en aperçu par LinkedIn/X/Slack → on sert la carte.
+  const ogImage = `/assets/og/${post.fileSlug}.jpg`
   write(
     `blog/${post.fileSlug}/index.html`,
     renderPage(
@@ -91,12 +94,12 @@ for (const post of posts) {
         description: post.data.excerpt,
         ogType: 'article',
         ogUrl: post.url,
-        image: post.data.image,
+        image: ogImage,
         date: post.data.date,
         categories,
         activeUrl: post.url,
       },
-      h(Article, { post, contentHtml: post.contentHtml, minutes: readingTime(post.contentHtml), related }),
+      h(Article, { post, contentHtml: post.contentHtml, minutes: readingTime(post.contentHtml), related, ogImage }),
     ),
   )
 }

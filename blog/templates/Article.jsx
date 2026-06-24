@@ -6,9 +6,11 @@ import PostCard from './PostCard.jsx'
 // CTA + JSON-LD. Ancien CTA → /demo.html (supprimé) ; rebranché sur l'app.
 const CTA_URL = 'https://app.rubysignal.com'
 
-export default function Article({ post, contentHtml, minutes, related = [] }) {
+export default function Article({ post, contentHtml, minutes, related = [], ogImage }) {
   const { title, excerpt, image, date, category, author } = post.data
   const by = author || site.author
+  // Image du JSON-LD = carte sociale raster (ogImage) si fournie, sinon l'illustration.
+  const schemaImage = ogImage || image
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -23,7 +25,7 @@ export default function Article({ post, contentHtml, minutes, related = [] }) {
       logo: { '@type': 'ImageObject', url: absoluteUrl('/assets/images/logo.png') },
     },
     mainEntityOfPage: absoluteUrl(post.url),
-    ...(image ? { image: absoluteUrl(image) } : {}),
+    ...(schemaImage ? { image: absoluteUrl(schemaImage) } : {}),
   }
 
   return (

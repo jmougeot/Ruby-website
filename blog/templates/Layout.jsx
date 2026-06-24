@@ -18,7 +18,7 @@ export default function Layout({
 }) {
   const pageTitle = metaTitle || (title ? `${title} — ${site.name}` : site.title)
   const desc = description || site.tagline
-  const ogImage = absoluteUrl(image || '/assets/images/logo.png')
+  const ogImage = absoluteUrl(image || '/og-card.jpg')
 
   return (
     <html lang={site.lang}>
@@ -44,7 +44,12 @@ export default function Layout({
         <title>{pageTitle}</title>
 
         <link rel="canonical" href={absoluteUrl(ogUrl)} />
-        <link rel="icon" type="image/png" href="/assets/images/logo.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="theme-color" content="#0b0b0d" />
         <link rel="alternate" type="application/atom+xml" title={site.journalName} href="/feed.xml" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

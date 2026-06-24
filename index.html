@@ -2,7 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#0b0b0d" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ruby — Become the sales rep you know you can be</title>
     <meta
@@ -21,7 +26,9 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.rubysignal.com/" />
-    <meta property="og:image" content="https://www.rubysignal.com/hero-cave.jpg" />
+    <meta property="og:image" content="https://www.rubysignal.com/og-card.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Ruby — Become the sales rep you know you can be" />
@@ -29,7 +36,7 @@
       name="twitter:description"
       content="Ruby analyzes your calls, identifies what's holding you back, and helps you improve one habit at a time."
     />
-    <meta name="twitter:image" content="https://www.rubysignal.com/hero-cave.jpg" />
+    <meta name="twitter:image" content="https://www.rubysignal.com/og-card.jpg" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -37,6 +44,40 @@
       href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Données structurées (schema.org) : aide Google à comprendre la marque,
+         le site et le produit → éligibilité aux résultats enrichis. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://www.rubysignal.com/#organization",
+            "name": "Ruby",
+            "url": "https://www.rubysignal.com/",
+            "logo": "https://www.rubysignal.com/assets/images/logo.png"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.rubysignal.com/#website",
+            "url": "https://www.rubysignal.com/",
+            "name": "Ruby",
+            "publisher": { "@id": "https://www.rubysignal.com/#organization" },
+            "inLanguage": "en"
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "Ruby",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web",
+            "url": "https://www.rubysignal.com/",
+            "description": "Ruby analyzes your calls, identifies what's holding you back, and helps you improve one habit at a time.",
+            "publisher": { "@id": "https://www.rubysignal.com/#organization" }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
