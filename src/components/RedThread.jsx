@@ -1,7 +1,7 @@
 /**
  * Le fil rouge — colonne vertébrale du scroll.
  * Pour l'instant cantonné au hero ; il sera étendu à toute la page
- * via GSAP ScrollTrigger au moment du plan-séquence (cf. motion.md).
+ * via GSAP ScrollTrigger au moment du plan-séquence (cf. docs/motion.md).
  */
 export default function RedThread() {
   return (

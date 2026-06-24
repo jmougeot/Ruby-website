@@ -1,7 +1,7 @@
 /* ========================================
    Journal / Blog — rendu éditorial type magazine
    S'appuie sur variables.css (chargé via style.css)
-   Charte : Inter, rouge #e31c3d en accent, sobriété, radius 8px.
+   Charte : Inter, rouge #ff4d5a en accent, sobriété, radius 8px.
    ======================================== */
 
 /* Police serif éditoriale pour les titres (façon Les Échos) */
@@ -179,7 +179,7 @@
     letter-spacing: 0.1em;
     font-weight: var(--font-weight-semibold);
     color: #ffffff;
-    background: #e31c3d;
+    background: #ff4d5a;
     padding: var(--space-xs) var(--space-md);
     border-radius: var(--radius-sm);
     margin-bottom: var(--space-md);
@@ -264,7 +264,7 @@
     font-weight: var(--font-weight-bold);
     display: inline-block;
     padding-bottom: var(--space-sm);
-    border-bottom: 3px solid #e31c3d;
+    border-bottom: 3px solid #ff4d5a;
 }
 
 /* ---- En-tête de rubrique ---- */
@@ -350,7 +350,7 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-weight: var(--font-weight-medium);
-    color: #e31c3d;
+    color: #ff4d5a;
 }
 
 .post-card__title {
@@ -418,7 +418,7 @@
 }
 
 .article__breadcrumb a {
-    color: #e31c3d;
+    color: #ff4d5a;
 }
 
 .article__breadcrumb a:hover {
@@ -541,7 +541,7 @@
     content: '—';
     position: absolute;
     left: calc(-1 * var(--space-xl));
-    color: #e31c3d;
+    color: #ff4d5a;
 }
 
 .article__body a {
@@ -558,7 +558,7 @@
 .article__body blockquote {
     margin: var(--space-2xl) 0;
     padding: var(--space-md) 0 var(--space-md) var(--space-xl);
-    border-left: 3px solid #e31c3d;
+    border-left: 3px solid #ff4d5a;
     font-size: var(--text-2xl);
     line-height: 1.4;
     font-weight: var(--font-weight-medium);

@@ -4,3 +4,6 @@ dist
 .DS_Store
 .vite
 .capture-frames
+
+# Gros artefacts vidéo locaux (démos brutes)
+*.mov

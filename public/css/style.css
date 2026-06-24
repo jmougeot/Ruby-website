@@ -90,7 +90,7 @@ button {
 }
 
 .section--dark .label {
-    color: #e31c3d;
+    color: #ff4d5a;
 }
 
 .section--dark .features__header {
@@ -113,7 +113,7 @@ button {
 }
 
 .section--light .label {
-    color: #e31c3d;
+    color: #ff4d5a;
 }
 
 /* ========================================
@@ -146,7 +146,7 @@ button {
     font-weight: var(--font-weight-medium);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #e31c3d;
+    color: #ff4d5a;
 }
 
 /* ========================================
@@ -168,7 +168,7 @@ button {
 }
 
 .btn--primary {
-    background-color: #e31c3d;
+    background-color: #ff4d5a;
     color: var(--color-white);
     position: relative;
     overflow: hidden;
@@ -253,7 +253,7 @@ button {
     left: 0;
     width: 0;
     height: 1px;
-    background: #e31c3d;
+    background: #ff4d5a;
     transition: width 0.3s ease;
 }
 
@@ -262,7 +262,7 @@ button {
 }
 
 .header__link--cta {
-    background-color: #e31c3d;
+    background-color: #ff4d5a;
     color: var(--color-white) !important;
     padding: var(--space-sm) var(--space-lg);
     margin-left: var(--space-md);
@@ -463,13 +463,13 @@ button {
 .feature-card__icon {
     font-size: var(--text-sm);
     font-weight: var(--font-weight-medium);
-    color: #e31c3d;
+    color: #ff4d5a;
     margin-bottom: var(--space-xl);
     letter-spacing: 0.05em;
 }
 
 .feature-card:hover .feature-card__icon {
-    color: #ff4d6a;
+    color: #ff4d5a;
 }
 
 .feature-card__title {
@@ -494,7 +494,7 @@ button {
     margin-top: var(--space-lg);
     padding: var(--space-md);
     background: rgba(227, 28, 61, 0.05);
-    border-left: 2px solid #e31c3d;
+    border-left: 2px solid #ff4d5a;
 }
 
 .example-label {
@@ -502,7 +502,7 @@ button {
     font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #e31c3d;
+    color: #ff4d5a;
     margin-bottom: var(--space-xs);
 }
 
@@ -561,7 +561,7 @@ button {
 .step-card__number {
     width: 32px;
     height: 32px;
-    background: #e31c3d;
+    background: #ff4d5a;
     color: var(--color-white);
     display: flex;
     align-items: center;
@@ -779,7 +779,7 @@ button {
 }
 
 .form__calendar-link {
-    color: #e31c3d;
+    color: #ff4d5a;
     font-weight: var(--font-weight-medium);
 }
 
@@ -795,7 +795,7 @@ button {
 .success__icon {
     width: 48px;
     height: 48px;
-    background: #e31c3d;
+    background: #ff4d5a;
     color: var(--color-white);
     font-size: var(--text-xl);
     display: flex;
@@ -876,11 +876,11 @@ button {
     content: '•';
     position: absolute;
     left: calc(-1 * var(--space-lg));
-    color: #e31c3d;
+    color: #ff4d5a;
 }
 
 .legal__section a {
-    color: #e31c3d;
+    color: #ff4d5a;
     text-decoration: underline;
 }
 
@@ -999,7 +999,7 @@ button {
 
 .transcript__line--prospect {
     background: rgba(227, 28, 61, 0.06);
-    border-left: 2px solid #e31c3d;
+    border-left: 2px solid #ff4d5a;
 }
 
 .transcript__line--silence {
@@ -1027,7 +1027,7 @@ button {
 }
 
 .transcript__speaker--prospect {
-    color: #e31c3d;
+    color: #ff4d5a;
 }
 
 .transcript__tags {
@@ -1061,7 +1061,7 @@ button {
 
 .coaching__icon {
     font-size: var(--text-lg);
-    color: #e31c3d;
+    color: #ff4d5a;
 }
 
 .coaching__title {

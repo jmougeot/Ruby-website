@@ -4,9 +4,9 @@
 
 :root {
     /* Colors */
-    --color-primary: #e31c3d;
-    --color-primary-hover: #c41230;
-    --color-accent: #ff4d6a;
+    --color-primary: #ff4d5a;        /* ruby canonique (charte) — aligné sur la landing */
+    --color-primary-hover: #c41230;  /* bas de rampe rubis (charte) */
+    --color-accent: #ff4d5a;
     --color-secondary: #6b7280;
     --color-dark: #0f0f0f;
     --color-light: #f8f8f8;
@@ -15,7 +15,7 @@
     
     /* Gradients */
     --gradient-hero: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
-    --gradient-ruby: linear-gradient(135deg, #e31c3d 0%, #ff4d6a 100%);
+    --gradient-ruby: linear-gradient(135deg, #ff4d5a 0%, #c41230 100%);
     
     /* Typography */
     --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
