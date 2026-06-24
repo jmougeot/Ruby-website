@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build && tsx scripts/build-blog.mjs",
+    "build": "vite build && tsx scripts/prerender-home.mjs && tsx scripts/build-blog.mjs",
+    "prerender": "tsx scripts/prerender-home.mjs",
     "build:blog": "tsx scripts/build-blog.mjs",
     "preview": "vite preview --host",
     "compress:models": "bash ./scripts/compress-models.sh",
