@@ -1,4 +1,7 @@
+import { useI18n } from '../i18n'
+
 export default function Header() {
+  const { t } = useI18n()
   // Saut vers une section SOUS le hero (≈1900vh piloté par l'aimant de scroll).
   // Un scroll FLUIDE traverserait la cinématique et l'aimant nous y rebloquerait →
   // on saute donc INSTANTANÉMENT au-delà du hero (p≈1, plus aucun palier armé).
@@ -42,7 +45,14 @@ export default function Header() {
           onClick={(e) => skipTo(e, 'integrations')}
           className="hidden rounded-full px-3.5 py-1.5 text-[13px] text-muted transition-colors hover:text-ink sm:inline-block"
         >
-          Integrations
+          {t('nav.integrations')}
+        </a>
+        <a
+          href="#team"
+          onClick={(e) => skipTo(e, 'team')}
+          className="hidden rounded-full px-3.5 py-1.5 text-[13px] text-muted transition-colors hover:text-ink sm:inline-block"
+        >
+          {t('nav.team')}
         </a>
         {/* Blog : page séparée (site Eleventy en /blog/) → vraie navigation, pas un
             saut d'ancre. Toujours visible (destination clé du site). */}
@@ -50,13 +60,13 @@ export default function Header() {
           href="/blog/"
           className="rounded-full px-3.5 py-1.5 text-[13px] text-muted transition-colors hover:text-ink"
         >
-          Blog
+          {t('nav.blog')}
         </a>
         <a
           href="https://app.rubysignal.com"
           className="rounded-full bg-ink px-3.5 py-1.5 text-[12px] font-medium text-night transition-opacity hover:opacity-90"
         >
-          Try it for free
+          {t('nav.cta')}
         </a>
       </nav>
     </header>

@@ -105,7 +105,7 @@ function FirstFrame({ onReady }) {
   return null
 }
 
-export default function CaveScene({ active = true, scroll, onReady, videoRef }) {
+export default function CaveScene({ active = true, scroll, onReady, videoRef, locale = 'en' }) {
   const noise = useMemo(() => createNoise3D(), [])
   const curve = useTunnelCurve()
   const uRef = useRef(DEBUG_LAKE ? U_END : U_START) // départ décalé dans la grotte (pas u=0)
@@ -173,7 +173,7 @@ export default function CaveScene({ active = true, scroll, onReady, videoRef }) 
         <DemoScreens curve={curve} uRef={uRef} breakRef={breakRef} videoRef={videoRef} />
       </Suspense>
       {/* messages = cartes « verre dépoli » 3D premium (texte canvas net) */}
-      <KeynoteCards curve={curve} uRef={uRef} exitRef={exitRef} />
+      <KeynoteCards curve={curve} uRef={uRef} exitRef={exitRef} locale={locale} />
       <EndLight curve={curve} uRef={uRef} />
       <RubyRig curve={curve} uRef={uRef} exitRef={exitRef} />
       <Environment resolution={128} frames={1}>

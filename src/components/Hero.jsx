@@ -4,11 +4,10 @@ import { createScrollMagnet } from './cave/scrollChoreography'
 import { U_ARRIVE, U_HOLD, S_CAVE_END, S_MSG_HOLD, S_EXIT_HOLD } from './cave/config'
 import RubyLoader from './RubyLoader'
 import VideoControls from './VideoControls'
+import { useI18n } from '../i18n'
 
 const CaveScene = lazy(() => import('./CaveScene'))
 const ease = [0.22, 1, 0.36, 1]
-// devant le 1er panneau : Ruby « travaille » → ces statuts défilent en boucle
-const ANALYZE_MSGS = ['Listening to your calls…', 'Finding what’s holding you back…', 'Coaching your next improvement…']
 
 // debug : ?debug=lake (lac) ou ?debug=exit0.18 (remontée figée) fige la scène et
 // masque les calques d'UI (image de repli, voile, texte, loader) → on voit la 3D
@@ -33,7 +32,10 @@ class Safe3D extends Component {
 }
 
 export default function Hero() {
+  const { t, locale } = useI18n()
   const reduce = useReducedMotion()
+  // devant le 1er panneau : Ruby « travaille » → ces statuts défilent en boucle
+  const analyzeMsgs = t('hero.analyze')
   // décidé SYNCHRONIQUEMENT au 1er rendu → la hauteur de section est stable,
   // pas de saut de scroll quand la 3D s'affiche ensuite
   const [use3D] = useState(() => {
@@ -77,9 +79,9 @@ export default function Hero() {
   useEffect(() => {
     if (!atPanel1) return
     setAnalyzeIdx(0)
-    const t = setInterval(() => setAnalyzeIdx((i) => (i + 1) % ANALYZE_MSGS.length), 1600)
-    return () => clearInterval(t)
-  }, [atPanel1])
+    const id = setInterval(() => setAnalyzeIdx((i) => (i + 1) % analyzeMsgs.length), 1600)
+    return () => clearInterval(id)
+  }, [atPanel1, analyzeMsgs.length])
 
   // clic « Suis-moi » → on glisse jusqu'à la vidéo démo (l'aimant fait le travail).
   const followRuby = () => magnetRef.current?.snapTo(U_ARRIVE)
@@ -232,6 +234,7 @@ export default function Hero() {
                 <CaveScene
                   active={inView && docVisible}
                   scroll={progress}
+                  locale={locale} // textes des cartes 3D (canvas) selon la langue
                   onReady={() => setReady(true)} // ferme le loader + lance le salut de Ruby
                   videoRef={videoElRef} // partage le <video> démo → barre de lecture
                 />
@@ -265,7 +268,7 @@ export default function Hero() {
               atLake ? 'pointer-events-none opacity-0' : 'opacity-100'
             }`}
           >
-            Skip intro →
+            {t('hero.skip')}
           </button>
         )}
 
@@ -285,14 +288,14 @@ export default function Hero() {
               variants={item}
               className="max-w-3xl text-balance text-[clamp(2.5rem,6.5vw,4.75rem)] font-medium leading-[1.05] tracking-tight"
             >
-              Become the sales rep you know you can be.
+              {t('hero.title')}
             </motion.h1>
 
             {/* unique ligne évocatrice, lue À L'ARRÊT (en haut) → s'efface au scroll
                 avec tout le bloc titre (overlayRef). La narration complète vit dans le
                 bloc « pont » sous le hero (App.jsx). */}
             <motion.p variants={item} className="mt-6 max-w-md text-base leading-relaxed text-muted">
-              Automatic feedback. Continuous improvement. More deals.
+              {t('hero.subtitle')}
             </motion.p>
 
             <motion.div variants={item} className="mt-9">
@@ -300,7 +303,7 @@ export default function Hero() {
                 href="https://app.rubysignal.com"
                 className="rounded-full bg-ink px-7 py-3.5 text-[15px] font-medium text-night shadow-[0_8px_30px_-8px_rgba(0,0,0,0.5)] transition-opacity hover:opacity-90"
               >
-                Try it for free
+                {t('hero.cta')}
               </a>
             </motion.div>
           </motion.div>
@@ -326,7 +329,7 @@ export default function Hero() {
                   <span className="pill-orb-spin" />
                 </span>
               )}
-              {greet === 'follow' ? 'Lost in the dark? Follow me ↓' : 'Hi — I’m Ruby'}
+              {greet === 'follow' ? t('hero.greetFollow') : t('hero.greetHello')}
             </button>
           </div>
         )}
@@ -348,7 +351,7 @@ export default function Hero() {
                   <span className="pill-orb" aria-hidden="true">
                     <span className="pill-orb-spin" />
                   </span>
-                  Break through ↓
+                  {t('hero.break')}
                 </button>
               </>
             )}
@@ -367,7 +370,7 @@ export default function Hero() {
                 <span className="pill-orb-spin" />
               </span>
               <span key={analyzeIdx} className="cycle-msg">
-                {ANALYZE_MSGS[analyzeIdx]}
+                {analyzeMsgs[analyzeIdx]}
               </span>
             </span>
           </div>
@@ -385,7 +388,7 @@ export default function Hero() {
               <span className="pill-orb" aria-hidden="true">
                 <span className="pill-orb-spin" />
               </span>
-              Try it for free →
+              {t('hero.lakeCta')}
             </a>
           </div>
         )}

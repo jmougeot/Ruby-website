@@ -72,7 +72,7 @@ Renvoie-moi le fichier et j'applique tout.
 [CARTE-1-KICKER]
 → Revelation
 [CARTE-1-TITRE]
-→ Find what's holding you back.
+→ Find what is the most important 
 [CARTE-1-METRIC]
 → Every call analyzed automatically
 

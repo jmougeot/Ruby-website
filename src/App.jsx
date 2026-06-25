@@ -3,7 +3,9 @@ import Header from './components/Header'
 import Hero from './components/Hero'
 import ScrollThread from './components/ScrollThread'
 import Integrations from './components/Integrations'
+import Team from './components/Team'
 import Footer from './components/Footer'
+import { LocaleProvider, useI18n } from './i18n'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -11,7 +13,19 @@ const ease = [0.22, 1, 0.36, 1]
 // de la scène (scripts/shot-at.mjs) → on ne shoote QUE la 3D brute.
 const CAPTURE = typeof window !== 'undefined' && window.location.search.includes('capture')
 
+// LocaleProvider EST DANS App → main.jsx (client) ET prerender-home.mjs (SSR) en
+// héritent sans rien changer. En SSR, detectLocale() → 'en' (pas de window) : le
+// pré-rendu SEO reste anglais.
 export default function App() {
+  return (
+    <LocaleProvider>
+      <Landing />
+    </LocaleProvider>
+  )
+}
+
+function Landing() {
+  const { t } = useI18n()
   const reduce = useReducedMotion()
   const reveal = {
     hidden: { opacity: 0, y: reduce ? 0 : 24 },
@@ -37,11 +51,11 @@ export default function App() {
               viewport={{ once: true, margin: '-15%' }}
               className="space-y-6 text-balance text-[clamp(1.5rem,3.2vw,2.25rem)] font-medium leading-snug tracking-tight"
             >
-              <p className="text-muted">You know you can improve</p>
-              <p className="text-muted">The hard part is knowing where to focus</p>
-              <p className="text-muted">And finding the time to do something about it.</p>
-              <p>Ruby shows you the way forward.</p>
-              <p>Turn improvements into habits, and habits into deals.</p>
+              <p className="text-muted">{t('overview.0')}</p>
+              <p className="text-muted">{t('overview.1')}</p>
+              <p className="text-muted">{t('overview.2')}</p>
+              <p>{t('overview.3')}</p>
+              <p>{t('overview.4')}</p>
             </motion.div>
           </div>
         </section>
@@ -50,6 +64,11 @@ export default function App() {
             savoir si ça branche sur Zoom/Gong avant d'agir). Remplace les 3 sections
             produit qui répétaient mot pour mot les cartes 3D de la grotte. */}
         <Integrations />
+
+        {/* Team — qui construit Ruby (description, note, photo, LinkedIn, email).
+            Placée AVANT le CTA pour rester dans le langage sombre ; le CTA garde
+            la transition obscurité → lumière en clôture. */}
+        <Team />
 
         {/* CTA final — on boucle sur la promesse du hero, émergence dans la clarté
             (dégradé sombre → #f8f8f6 pour prolonger l'arc obscurité → lumière). */}
@@ -67,7 +86,7 @@ export default function App() {
               viewport={{ once: true, margin: '-15%' }}
               className="mx-auto max-w-3xl text-balance text-[clamp(2rem,5vw,3.5rem)] font-medium tracking-tight text-night"
             >
-              Become the sales rep you know you can be.
+              {t('cta.title')}
             </motion.h2>
             <motion.div
               variants={reveal}
@@ -80,9 +99,9 @@ export default function App() {
                 href="https://app.rubysignal.com"
                 className="inline-block rounded-full bg-ruby px-8 py-4 text-[15px] font-medium text-white shadow-[0_0_40px_-6px_var(--ruby-glow)] transition-shadow hover:shadow-[0_0_52px_-4px_var(--ruby-glow)]"
               >
-                Try it for free
+                {t('cta.button')}
               </a>
-              <p className="mt-4 text-sm text-night/50">Free to get started — no credit card.</p>
+              <p className="mt-4 text-sm text-night/50">{t('cta.note')}</p>
             </motion.div>
           </div>
         </section>

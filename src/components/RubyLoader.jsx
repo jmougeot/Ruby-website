@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useI18n } from '../i18n'
 
 /**
  * Écran de chargement — fond profond, rubis de marque, anneau de progression.
@@ -45,6 +46,7 @@ const C = 2 * Math.PI * R
 const halo = (p) => `radial-gradient(circle, rgba(255,77,90,${0.05 + 0.13 * p}) 0%, rgba(255,77,90,0) 60%)`
 
 export default function RubyLoader({ ready = false }) {
+  const { t } = useI18n()
   const [done, setDone] = useState(false)
   const [complete, setComplete] = useState(false) // déclenche le bounce final de la gemme
   const mountedAt = useRef(performance.now())
@@ -202,7 +204,7 @@ export default function RubyLoader({ ready = false }) {
               Ruby
             </span>
             <span className="mt-2.5 text-[10px] uppercase tracking-[0.28em] text-white/30">
-              Continuous Sales Coaching
+              {t('loader.tagline')}
             </span>
 
             {/* l'impatient / le visiteur de retour peut filer vers l'app sans
@@ -211,7 +213,7 @@ export default function RubyLoader({ ready = false }) {
               href="https://app.rubysignal.com"
               className="mt-8 rounded-full border border-white/15 px-4 py-2 text-[12px] font-medium text-white/70 transition-colors hover:border-white/30 hover:text-white"
             >
-              Try it for free →
+              {t('loader.cta')}
             </a>
           </motion.div>
         </motion.div>

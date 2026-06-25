@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useI18n } from '../i18n'
 
 /** m:ss */
 function fmt(s) {
@@ -15,6 +16,7 @@ function fmt(s) {
  *  - temps écoulé / durée
  *  On écrit la progression DIRECTEMENT dans le DOM (refs) → pas de re-render/frame. */
 export default function VideoControls({ videoRef, visible }) {
+  const { t } = useI18n()
   const trackRef = useRef(null)
   const fillRef = useRef(null)
   const knobRef = useRef(null)
@@ -94,7 +96,7 @@ export default function VideoControls({ videoRef, visible }) {
         <button
           type="button"
           onClick={togglePlay}
-          aria-label={playing ? 'Pause' : 'Play'}
+          aria-label={playing ? t('video.pause') : t('video.play')}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/90 text-night transition-transform hover:scale-105"
         >
           {playing ? (

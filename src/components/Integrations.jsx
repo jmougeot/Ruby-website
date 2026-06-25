@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion'
+import { useI18n } from '../i18n'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -11,6 +12,7 @@ const TOOLS = ['Zoom', 'Google Meet', 'Microsoft Teams', 'Gong', 'Modjo']
  * wordmarks discrètes. Ancrée #integrations (lien du header).
  */
 export default function Integrations() {
+  const { t } = useI18n()
   const reduce = useReducedMotion()
   const reveal = {
     hidden: { opacity: 0, y: reduce ? 0 : 20 },
@@ -28,13 +30,13 @@ export default function Integrations() {
           viewport={{ once: true, margin: '-15%' }}
         >
           <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-            Integrations
+            {t('integrations.kicker')}
           </span>
           <h2 className="mx-auto mt-5 max-w-2xl text-balance text-[clamp(1.75rem,4vw,2.75rem)] font-medium leading-[1.1] tracking-tight">
-            Works with the tools you already use.
+            {t('integrations.title')}
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted">
-            Ruby plugs into your calls and your stack — no new workflow to learn.
+            {t('integrations.subtitle')}
           </p>
         </motion.div>
 
