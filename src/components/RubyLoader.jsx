@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useWaitlist } from './Waitlist'
 import { useI18n } from '../i18n'
 
 /**
@@ -47,6 +48,7 @@ const halo = (p) => `radial-gradient(circle, rgba(255,77,90,${0.05 + 0.13 * p}) 
 
 export default function RubyLoader({ ready = false }) {
   const { t } = useI18n()
+  const { open } = useWaitlist()
   const [done, setDone] = useState(false)
   const [complete, setComplete] = useState(false) // déclenche le bounce final de la gemme
   const mountedAt = useRef(performance.now())
@@ -207,14 +209,15 @@ export default function RubyLoader({ ready = false }) {
               {t('loader.tagline')}
             </span>
 
-            {/* l'impatient / le visiteur de retour peut filer vers l'app sans
+            {/* l'impatient / le visiteur de retour peut rejoindre la waitlist sans
                 attendre la fin du chargement de la 3D. */}
-            <a
-              href="https://app.rubysignal.com"
+            <button
+              type="button"
+              onClick={open}
               className="mt-8 rounded-full border border-white/15 px-4 py-2 text-[12px] font-medium text-white/70 transition-colors hover:border-white/30 hover:text-white"
             >
               {t('loader.cta')}
-            </a>
+            </button>
           </motion.div>
         </motion.div>
       )}

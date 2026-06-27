@@ -22,18 +22,18 @@ export const strings = {
     'nav.integrations': 'Integrations',
     'nav.team': 'Team',
     'nav.blog': 'Blog',
-    'nav.cta': 'Try it for free',
+    'nav.cta': 'Join the waitlist',
     'nav.langSwitch': 'Passer en français',
 
     // Hero
     'hero.title': 'Become the sales rep you know you can be.',
     'hero.subtitle': 'Automatic feedback. Continuous improvement. More deals.',
-    'hero.cta': 'Try it for free',
+    'hero.cta': 'Join the waitlist',
     'hero.skip': 'Skip intro →',
     'hero.greetHello': 'Hi — I’m Ruby',
     'hero.greetFollow': 'Lost in the dark? Follow me ↓',
     'hero.break': 'Break through ↓',
-    'hero.lakeCta': 'Try it for free →',
+    'hero.lakeCta': 'Join the waitlist →',
     'hero.analyze': [
       'Listening to your calls…',
       'Finding what’s holding you back…',
@@ -49,8 +49,18 @@ export const strings = {
 
     // CTA final
     'cta.title': 'Become the sales rep you know you can be.',
-    'cta.button': 'Try it for free',
-    'cta.note': 'Free to get started — no credit card.',
+    'cta.button': 'Join the waitlist',
+    'cta.note': 'Be the first to know when Ruby launches. No spam.',
+
+    // Waitlist (modale + formulaire inline)
+    'waitlist.title': 'Join the waitlist',
+    'waitlist.subtitle': 'Be the first to get access when Ruby launches.',
+    'waitlist.placeholder': 'you@company.com',
+    'waitlist.submit': 'Join the waitlist',
+    'waitlist.sending': 'Joining…',
+    'waitlist.success': 'You’re on the list — we’ll be in touch soon.',
+    'waitlist.error': 'Something went wrong. Please try again.',
+    'waitlist.close': 'Close',
 
     // Intégrations
     'integrations.kicker': 'Integrations',
@@ -74,7 +84,7 @@ export const strings = {
 
     // Loader
     'loader.tagline': 'Continuous Sales Coaching',
-    'loader.cta': 'Try it for free →',
+    'loader.cta': 'Join the waitlist →',
 
     // Contrôles vidéo (aria-label)
     'video.play': 'Play',
@@ -102,17 +112,17 @@ export const strings = {
     'nav.integrations': 'Intégrations',
     'nav.team': 'Équipe',
     'nav.blog': 'Blog',
-    'nav.cta': 'Essayer gratuitement',
+    'nav.cta': 'Rejoindre la waitlist',
     'nav.langSwitch': 'Switch to English',
 
     'hero.title': 'Deviens le commercial que tu peux être.',
     'hero.subtitle': 'Feedback automatique. Progression continue. Plus de ventes.',
-    'hero.cta': 'Essayer gratuitement',
+    'hero.cta': 'Rejoindre la waitlist',
     'hero.skip': 'Passer l’intro →',
     'hero.greetHello': 'Salut, moi c’est Ruby',
     'hero.greetFollow': 'Perdu dans le noir ? Suis-moi ↓',
     'hero.break': 'Brise l’écran ↓',
-    'hero.lakeCta': 'Essayer gratuitement →',
+    'hero.lakeCta': 'Rejoindre la waitlist →',
     'hero.analyze': [
       'On écoute tes appels…',
       'On repère ce qui te freine…',
@@ -126,8 +136,17 @@ export const strings = {
     'overview.4': 'Transforme tes progrès en habitudes, et tes habitudes en ventes.',
 
     'cta.title': 'Deviens le commercial que tu peux être.',
-    'cta.button': 'Essayer gratuitement',
-    'cta.note': 'Gratuit pour commencer — sans carte bancaire.',
+    'cta.button': 'Rejoindre la waitlist',
+    'cta.note': 'Sois parmi les premiers informés du lancement de Ruby. Zéro spam.',
+
+    'waitlist.title': 'Rejoins la waitlist',
+    'waitlist.subtitle': 'Sois parmi les premiers à accéder à Ruby au lancement.',
+    'waitlist.placeholder': 'toi@entreprise.com',
+    'waitlist.submit': 'Rejoindre',
+    'waitlist.sending': 'Envoi…',
+    'waitlist.success': 'Tu es sur la liste — on revient vite vers toi.',
+    'waitlist.error': 'Une erreur est survenue. Réessaie.',
+    'waitlist.close': 'Fermer',
 
     'integrations.kicker': 'Intégrations',
     'integrations.title': 'Compatible avec les outils que tu utilises déjà.',
@@ -147,7 +166,7 @@ export const strings = {
     'footer.contact': 'Contact',
 
     'loader.tagline': 'Coaching commercial continu',
-    'loader.cta': 'Essayer gratuitement →',
+    'loader.cta': 'Rejoindre la waitlist →',
 
     'video.play': 'Lecture',
     'video.pause': 'Pause',

@@ -5,6 +5,7 @@ import ScrollThread from './components/ScrollThread'
 import Integrations from './components/Integrations'
 import Team from './components/Team'
 import Footer from './components/Footer'
+import { WaitlistProvider, WaitlistModal, WaitlistForm } from './components/Waitlist'
 import { LocaleProvider, useI18n } from './i18n'
 
 const ease = [0.22, 1, 0.36, 1]
@@ -19,7 +20,10 @@ const CAPTURE = typeof window !== 'undefined' && window.location.search.includes
 export default function App() {
   return (
     <LocaleProvider>
-      <Landing />
+      <WaitlistProvider>
+        <Landing />
+        <WaitlistModal />
+      </WaitlistProvider>
     </LocaleProvider>
   )
 }
@@ -95,12 +99,7 @@ function Landing() {
               viewport={{ once: true }}
               className="mt-10"
             >
-              <a
-                href="https://app.rubysignal.com"
-                className="inline-block rounded-full bg-ruby px-8 py-4 text-[15px] font-medium text-white shadow-[0_0_40px_-6px_var(--ruby-glow)] transition-shadow hover:shadow-[0_0_52px_-4px_var(--ruby-glow)]"
-              >
-                {t('cta.button')}
-              </a>
+              <WaitlistForm variant="inline" />
               <p className="mt-4 text-sm text-night/50">{t('cta.note')}</p>
             </motion.div>
           </div>

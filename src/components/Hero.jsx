@@ -4,6 +4,7 @@ import { createScrollMagnet } from './cave/scrollChoreography'
 import { U_ARRIVE, U_HOLD, S_CAVE_END, S_MSG_HOLD, S_EXIT_HOLD } from './cave/config'
 import RubyLoader from './RubyLoader'
 import VideoControls from './VideoControls'
+import { useWaitlist } from './Waitlist'
 import { useI18n } from '../i18n'
 
 const CaveScene = lazy(() => import('./CaveScene'))
@@ -33,6 +34,7 @@ class Safe3D extends Component {
 
 export default function Hero() {
   const { t, locale } = useI18n()
+  const { open } = useWaitlist()
   const reduce = useReducedMotion()
   // devant le 1er panneau : Ruby « travaille » → ces statuts défilent en boucle
   const analyzeMsgs = t('hero.analyze')
@@ -299,12 +301,13 @@ export default function Hero() {
             </motion.p>
 
             <motion.div variants={item} className="mt-9">
-              <a
-                href="https://app.rubysignal.com"
+              <button
+                type="button"
+                onClick={open}
                 className="rounded-full bg-ink px-7 py-3.5 text-[15px] font-medium text-night shadow-[0_8px_30px_-8px_rgba(0,0,0,0.5)] transition-opacity hover:opacity-90"
               >
                 {t('hero.cta')}
-              </a>
+              </button>
             </motion.div>
           </motion.div>
         </div>
@@ -376,20 +379,20 @@ export default function Hero() {
           </div>
         )}
 
-        {/* SUR LE LAC (fin) — petite bulle « Try it for free » : Ruby a mené jusqu'à
-            la lumière, la bulle envoie passer à l'action (→ app.rubysignal.com). */}
+        {/* SUR LE LAC (fin) — petite bulle « Rejoindre la waitlist » : Ruby a mené jusqu'à
+            la lumière, la bulle envoie passer à l'action (→ ouvre la modale waitlist). */}
         {use3D && !HIDE_UI && (
           <div
             className={`absolute inset-x-0 bottom-0 z-10 flex justify-center px-6 pb-12 transition-opacity duration-500 md:pb-14 ${
               atLake ? 'opacity-100' : 'pointer-events-none opacity-0'
             }`}
           >
-            <a href="https://app.rubysignal.com" className="speech-pill is-in is-follow">
+            <button type="button" onClick={open} className="speech-pill is-in is-follow">
               <span className="pill-orb" aria-hidden="true">
                 <span className="pill-orb-spin" />
               </span>
               {t('hero.lakeCta')}
-            </a>
+            </button>
           </div>
         )}
       </div>

@@ -1,7 +1,9 @@
 import { useI18n } from '../i18n'
+import { useWaitlist } from './Waitlist'
 
 export default function Header() {
   const { t } = useI18n()
+  const { open } = useWaitlist()
   // Saut vers une section SOUS le hero (≈1900vh piloté par l'aimant de scroll).
   // Un scroll FLUIDE traverserait la cinématique et l'aimant nous y rebloquerait →
   // on saute donc INSTANTANÉMENT au-delà du hero (p≈1, plus aucun palier armé).
@@ -62,12 +64,13 @@ export default function Header() {
         >
           {t('nav.blog')}
         </a>
-        <a
-          href="https://app.rubysignal.com"
+        <button
+          type="button"
+          onClick={open}
           className="rounded-full bg-ink px-3.5 py-1.5 text-[12px] font-medium text-night transition-opacity hover:opacity-90"
         >
           {t('nav.cta')}
-        </a>
+        </button>
       </nav>
     </header>
   )
