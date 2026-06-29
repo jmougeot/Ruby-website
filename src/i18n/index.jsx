@@ -3,8 +3,10 @@
 // EN sinon. Le site est statique (GitHub Pages) → AUCUNE détection serveur possible,
 // tout se décide dans le navigateur :
 //   1. choix explicite mémorisé (bouton EN/FR) → localStorage,
-//   2. sinon langue du navigateur (navigator.languages commence par « fr »),
-//   3. sinon fuseau horaire Europe/Paris (proxy « physiquement en France »).
+//   2. sinon préférence du navigateur : FR si navigator.languages contient « fr »,
+//      sinon EN — une langue de navigateur explicite prime sur le fuseau,
+//   3. fuseau Europe/Paris UNIQUEMENT si le navigateur n'annonce aucune langue
+//      (cas rare ; proxy « physiquement en France »).
 //
 // SSR / pré-rendu : pas de `window` → detectLocale() renvoie 'en'. Le pré-rendu SEO
 // reste donc anglais (cf. scripts/prerender-home.mjs), et au montage createRoot()
@@ -28,8 +30,13 @@ export function detectLocale() {
   } catch {
     /* localStorage indisponible (mode privé strict…) → on continue sur l'heuristique */
   }
-  const navLangs = navigator.languages?.length ? navigator.languages : [navigator.language || '']
-  if (navLangs.some((l) => l.toLowerCase().startsWith('fr'))) return 'fr'
+  // La préférence de langue du navigateur est un signal explicite → elle prime.
+  // FR si l'une des langues commence par « fr », sinon EN (navigateur en anglais).
+  const navLangs = (navigator.languages?.length ? navigator.languages : [navigator.language]).filter(Boolean)
+  if (navLangs.length) {
+    return navLangs.some((l) => l.toLowerCase().startsWith('fr')) ? 'fr' : 'en'
+  }
+  // Aucune langue exploitable (rare) → fuseau Europe/Paris comme proxy « en France ».
   try {
     if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Europe/Paris') return 'fr'
   } catch {
