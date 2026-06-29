@@ -34,6 +34,7 @@ export const strings = {
     'hero.greetFollow': 'Lost in the dark? Follow me ↓',
     'hero.break': 'Break through ↓',
     'hero.lakeCta': 'Join the waitlist →',
+    'hero.proof': 'Loved by reps at Sunday & co.',
     'hero.analyze': [
       'Listening to your calls…',
       'Finding what’s holding you back…',
@@ -67,6 +68,13 @@ export const strings = {
     'integrations.title': 'Works with the tools you already use.',
     'integrations.subtitle':
       'Ruby plugs into your calls and your stack — no new workflow to learn.',
+
+    // Témoignages ({name} est remplacé par le nom de la personne)
+    'testimonials.kicker': 'Testimonials',
+    'testimonials.title': 'Reps are already changing how they sell.',
+    'testimonials.subtitle':
+      'Early users on what shifts when Ruby coaches them, call after call.',
+    'testimonials.linkedinAria': '{name} on LinkedIn',
 
     // Équipe ({name} est remplacé par le nom du membre)
     'team.kicker': 'Team',
@@ -123,6 +131,7 @@ export const strings = {
     'hero.greetFollow': 'Perdu dans le noir ? Suis-moi ↓',
     'hero.break': 'Brise l’écran ↓',
     'hero.lakeCta': 'Rejoindre la waitlist →',
+    'hero.proof': 'Adopté par des commerciaux chez Sunday & co.',
     'hero.analyze': [
       'On écoute tes appels…',
       'On repère ce qui te freine…',
@@ -152,6 +161,12 @@ export const strings = {
     'integrations.title': 'Compatible avec les outils que tu utilises déjà.',
     'integrations.subtitle':
       'Ruby se connecte à tes appels et à tes outils — rien de nouveau à apprendre.',
+
+    'testimonials.kicker': 'Témoignages',
+    'testimonials.title': 'Des commerciaux changent déjà leur façon de vendre.',
+    'testimonials.subtitle':
+      'Les premiers utilisateurs racontent ce qui change quand Ruby les coache, appel après appel.',
+    'testimonials.linkedinAria': '{name} sur LinkedIn',
 
     'team.kicker': 'Équipe',
     'team.title': 'L’équipe derrière Ruby.',

@@ -3,6 +3,7 @@ import Header from './components/Header'
 import Hero from './components/Hero'
 import ScrollThread from './components/ScrollThread'
 import Integrations from './components/Integrations'
+import Testimonials from './components/Testimonials'
 import Team from './components/Team'
 import Footer from './components/Footer'
 import { WaitlistProvider, WaitlistModal, WaitlistForm } from './components/Waitlist'
@@ -68,6 +69,11 @@ function Landing() {
             savoir si ça branche sur Zoom/Gong avant d'agir). Remplace les 3 sections
             produit qui répétaient mot pour mot les cartes 3D de la grotte. */}
         <Integrations />
+
+        {/* Témoignages — la preuve sociale détaillée (citations complètes + cartes
+            auteur). Le hero porte déjà la version courte EN TÊTE ; ici on développe,
+            une fois la valeur posée (narration + stack), juste avant l'équipe. */}
+        <Testimonials />
 
         {/* Team — qui construit Ruby (description, note, photo, LinkedIn, email).
             Placée AVANT le CTA pour rester dans le langage sombre ; le CTA garde

@@ -6,9 +6,16 @@ import RubyLoader from './RubyLoader'
 import VideoControls from './VideoControls'
 import { useWaitlist } from './Waitlist'
 import { useI18n } from '../i18n'
+import { TESTIMONIALS } from '../data/testimonials'
 
 const CaveScene = lazy(() => import('./CaveScene'))
 const ease = [0.22, 1, 0.36, 1]
+
+// Visages de caution SUPPLÉMENTAIRES dans la pile d'avatars du hero. Pas des
+// témoignages (pas de citation) → on les empile DERRIÈRE les deux avatars de
+// <Testimonials> : rendus en PREMIER, donc peints d'abord et recouverts par les
+// deux autres (-space-x-2, l'ordre DOM = l'ordre de peinture).
+const EXTRA_PROOF_FACES = ['/team/ronan.jpg', '/team/jean.jpg']
 
 // debug : ?debug=lake (lac) ou ?debug=exit0.18 (remontée figée) fige la scène et
 // masque les calques d'UI (image de repli, voile, texte, loader) → on voit la 3D
@@ -288,7 +295,7 @@ export default function Hero() {
           >
             <motion.h1
               variants={item}
-              className="max-w-3xl text-balance text-[clamp(2.5rem,6.5vw,4.75rem)] font-medium leading-[1.05] tracking-tight"
+              className="max-w-3xl text-balance text-[clamp(2.25rem,5.5vw,3.75rem)] font-medium leading-[1.05] tracking-tight"
             >
               {t('hero.title')}
             </motion.h1>
@@ -296,7 +303,7 @@ export default function Hero() {
             {/* unique ligne évocatrice, lue À L'ARRÊT (en haut) → s'efface au scroll
                 avec tout le bloc titre (overlayRef). La narration complète vit dans le
                 bloc « pont » sous le hero (App.jsx). */}
-            <motion.p variants={item} className="mt-6 max-w-md text-base leading-relaxed text-muted">
+            <motion.p variants={item} className="mt-6 max-w-lg text-lg leading-relaxed text-muted md:text-xl">
               {t('hero.subtitle')}
             </motion.p>
 
@@ -308,6 +315,29 @@ export default function Hero() {
               >
                 {t('hero.cta')}
               </button>
+            </motion.div>
+
+            {/* PREUVE SOCIALE EN TÊTE — une seule ligne discrète : avatars empilés +
+                phrase de caution. Volontairement « chuchotée » → ne concurrence ni le
+                CTA ni Ruby. Le détail (citations complètes) vit dans <Testimonials>. */}
+            <motion.div
+              variants={item}
+              className="mt-10 flex items-center justify-center gap-2.5 text-xs text-muted"
+            >
+              <div className="flex -space-x-2">
+                {[...EXTRA_PROOF_FACES, ...TESTIMONIALS.filter((p) => p.photo).map((p) => p.photo)].map(
+                  (src) => (
+                    <img
+                      key={src}
+                      src={src}
+                      alt=""
+                      aria-hidden="true"
+                      className="h-7 w-7 rounded-full object-cover ring-2 ring-night"
+                    />
+                  ),
+                )}
+              </div>
+              <span>{t('hero.proof')}</span>
             </motion.div>
           </motion.div>
         </div>
