@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { U_END, LAKE_Y, EXIT_HOLD } from './config'
 import { caveReadPose, exitChoreography } from './caveGeometry'
+import { getDeviceProfile } from './deviceProfile'
 import { translate } from '../../i18n'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -180,11 +181,15 @@ function drawCard(ctx, W, H, { kicker, title, body }) {
 function useCardTexture(content) {
   const tex = useMemo(() => {
     // dessin AUTEUR en coordonnées base (2048) ; raster à base×DPR (→ 4096 sur
-    // Retina) pour suivre le framebuffer monté à 2× → texte piqué même quand la
-    // carte occupe une grande part de l'écran. Sur écran DPR 1 → reste 2048.
+    // Retina desktop) pour suivre le framebuffer monté à 2× → texte piqué même quand
+    // la carte occupe une grande part de l'écran. Plafond par PROFIL (2 desktop,
+    // 1,5 mobile — un tél. Retina n'a pas besoin de 3 canvas 4096×2304 en VRAM).
     const BASE_W = 2048
     const BASE_H = Math.round(BASE_W / CARD_ASPECT)
-    const scale = Math.min((typeof window !== 'undefined' && window.devicePixelRatio) || 1, 2)
+    const scale = Math.min(
+      (typeof window !== 'undefined' && window.devicePixelRatio) || 1,
+      getDeviceProfile().cardDprCap,
+    )
     const cv = document.createElement('canvas')
     cv.width = BASE_W * scale
     cv.height = BASE_H * scale

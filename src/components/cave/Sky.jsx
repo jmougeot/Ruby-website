@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { LAKE_Y, smooth01 } from './config'
+import { getDeviceProfile } from './deviceProfile'
 
 /** Ciel en DÉGRADÉ (dôme inversé) : horizon pâle chaud → zénith bleu profond.
  *  Non affecté par le fog (c'est LE ciel), fondu via l'opacité avec la sortie ;
@@ -150,7 +151,9 @@ export function MountainClouds({ center, horizDir, side, exitRef }) {
   const gold = useMemo(() => new THREE.Color('#ffc98c'), []) // halo de contre-jour
   const clumps = useMemo(() => {
     const arr = []
-    const N = 18
+    // profil : 18 touffes desktop, 10 mobile (chaque touffe ≈ 6 sprites transparents
+    // plein cadre au moment de l'émergence → l'overdraw est le vrai coût ici)
+    const N = getDeviceProfile().cloudClumps
     for (let i = 0; i < N; i++) {
       const altF = 0.6 + Math.random() * 0.5 // 0.6 (flancs) → ~1.1 (au-dessus de la pointe)
       // haut = petit rayon (frôle la pointe) ; bas = large (le cône est plus gros)

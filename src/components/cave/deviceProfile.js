@@ -21,8 +21,39 @@ export function isMobileDevice() {
 }
 
 // Curseurs de coût GPU. Point de départ raisonnable — à affiner sur device réel.
-const DESKTOP = { isMobile: false, dprCap: 2, envResolution: 128, texSize: 512, multisampling: 4 }
-const MOBILE = { isMobile: true, dprCap: 1.5, envResolution: 64, texSize: 384, multisampling: 0 }
+// Uniquement des NOMBRES/booléens (fichier pur) ; chaque fichier 3D lit son curseur.
+const DESKTOP = {
+  isMobile: false,
+  dprCap: 2,
+  envResolution: 128,
+  texSize: 512,
+  multisampling: 4,
+  cardDprCap: 2, // résolution des textures canvas des cartes keynote (KeynoteCards)
+  waterClearcoat: true, // vernis clearcoat sur l'eau — quasi double le coût de shading des plans d'eau
+  tubeSegments: 480, // TubeGeometry des parois (tubulaire × radial)
+  tubeRadial: 32,
+  waterSegments: 80, // maille de la nappe d'eau de la grotte (houle en vertex shader)
+  mountainRings: 100, // maille de la montagne du lac (rings × segs ; ~64k tris desktop —
+  mountainSegs: 320, // l'ancienne 150×520 = 156k tris, invisible de loin sous le fog/haze)
+  treeMax: 650, // forêt instanciée (2 draw calls quel que soit le nombre)
+  cloudClumps: 18, // touffes de nuages (≈ 6 sprites transparents chacune → overdraw)
+}
+const MOBILE = {
+  isMobile: true,
+  dprCap: 1.5,
+  envResolution: 64,
+  texSize: 384,
+  multisampling: 0,
+  cardDprCap: 1.5,
+  waterClearcoat: false,
+  tubeSegments: 320,
+  tubeRadial: 24,
+  waterSegments: 56,
+  mountainRings: 72, // ≈ 32k tris
+  mountainSegs: 220,
+  treeMax: 350,
+  cloudClumps: 10,
+}
 
 export function getDeviceProfile() {
   return isMobileDevice() ? MOBILE : DESKTOP

@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { U_END, LAKE_Y, smooth01 } from './config'
 import { makeNormalTex } from './textures'
+import { getDeviceProfile } from './deviceProfile'
 import { MountainTerrain } from './MountainTerrain'
 import { SkyDome, MountainClouds } from './Sky'
 
@@ -111,7 +112,7 @@ transformed.z += sin(position.x*0.04 + uTime*0.4)*0.5 + sin(position.y*0.05 - uT
           color="#33617a"
           roughness={0.34}
           metalness={0}
-          clearcoat={0.3}
+          clearcoat={getDeviceProfile().waterClearcoat ? 0.3 : 0}
           clearcoatRoughness={0.45}
           envMapIntensity={0.9}
           normalMap={normalA}

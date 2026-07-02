@@ -63,26 +63,28 @@ export const U_STOP = U_SCREENS - LEAD // le rubis s'arrête PILE à l'écran (d
 export const U_END = 0.2475 // bout du tunnel (INCHANGÉ : tout l'après-vidéo reste identique)
 
 // ── Découpage du scroll ──
-// Section très haute (Hero h-[1490vh]) : TOUT le parcours de Ruby est lent. La pause
-// et le bris (Ruby immobile) gardent ≈ leur longueur d'origine.
-// NB : le PREMIER tronçon (départ → vidéo démo) a été RACCOURCI de moitié (≈820vh →
-// ≈410vh). Tous les AUTRES tronçons gardent leur longueur de scroll d'origine : les
-// seuils ci-dessous ET la hauteur du hero (1900→1490vh) ont été recalés ensemble.
-export const U_ARRIVE = 0.275 // fin du trajet : arrivé sur la vidéo (1er tronçon ÷2)
-export const U_HOLD = 0.326 // fin de la PAUSE (vidéo plein écran figée) → le bris démarre après
-export const U_BREAK = 0.415 // fin du BRIS : Ruby reste bloqué tant que l'écran n'est pas brisé à 100%
-export const S_CAVE_END = 0.798 // bout de la grotte : la croisière s'arrête, le 1er
+// SCROLL LIBRE (plus d'aimant qui confisque le geste) : la garantie que chaque
+// pose est VUE vient des PLATEAUX de la timeline — des plages de scroll entières
+// où la caméra reste figée sur la vidéo / les panneaux. Budget en ÉCRANS de scroll
+// (course totale = 10,8 écrans → Hero h-[1180vh] = course + 1 écran ; les deux
+// DOIVENT être recalés ensemble) :
+//   approche 1,8 · pause vidéo 1,2 · bris 0,9 · croisière 2,8 · panneau 1 : 1,2 ·
+//   montée 0,7 · panneau 2 : 1,2 · émergence 0,5 · tampon lac 0,5
+// Principe : approche + croisière raccourcies (on les parcourt à la main désormais),
+// plateaux de lecture ÉLARGIS (≥ 1,2 écran) → même un fling ne les saute pas.
+export const U_ARRIVE = 0.167 // fin du trajet : arrivé sur la vidéo
+export const U_HOLD = 0.278 // fin de la PAUSE (vidéo plein écran figée) → le bris démarre après
+export const U_BREAK = 0.361 // fin du BRIS : Ruby reste bloqué tant que l'écran n'est pas brisé à 100%
+export const S_CAVE_END = 0.62 // bout de la grotte : la croisière s'arrête, le 1er
 // message ("Ruby finds…") apparaît, caméra FIGÉE au bout de grotte (pose A).
 // PAUSE DE LECTURE du 1er message : entre S_CAVE_END et S_MSG_HOLD tout est figé
-// (uRef=U_END, exit=0) → on lit le 1er texte. L'aimant de sortie ne s'arme qu'APRÈS
-// S_MSG_HOLD (exactement comme la pause vidéo) → on S'ARRÊTE vraiment sur le 1er message.
-export const S_MSG_HOLD = 0.849 // fin de la pause de lecture du 1er message
-// SLIDE 3 : on remonte dans le puits et on se BLOQUE devant le 2e message (pose B).
+// (uRef=U_END, exit=0) → on lit le 1er texte.
+export const S_MSG_HOLD = 0.731 // fin de la pause de lecture du 1er message
+// SLIDE 3 : on remonte dans le puits jusqu'au 2e message (pose B).
 // SLIDE 4 : on repart et on émerge sur le lac (pose C).
-export const S_EXIT_RISE = 0.887 // fin de la montée → l'aimant BLOQUE ici (devant le 2e message)
-export const S_EXIT_HOLD = 0.938 // fin du LARGE palier (zone morte : l'inertie meurt avant
-// que l'aimant du lac s'arme → on reste vraiment bloqué devant le message)
-export const S_EXIT_END = 0.964 // l'aimant BLOQUE ici (sur le lac) ; au-delà → PAUSE tampon
+export const S_EXIT_RISE = 0.796 // fin de la montée → PLATEAU devant le 2e message
+export const S_EXIT_HOLD = 0.907 // fin du LARGE palier de lecture du 2e message
+export const S_EXIT_END = 0.954 // émergé sur le lac ; au-delà → PAUSE tampon
 export const EXIT_HOLD = 0.3 // niveau de remontée (exit) auquel on se bloque pendant le palier
 // (plus bas = on s'arrête plus tôt/plus bas dans le puits, devant le message)
 // (de S_EXIT_END à 1 : Ruby figé sur le lac → un scroll ne saute pas direct aux sections suivantes)

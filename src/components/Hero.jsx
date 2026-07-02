@@ -1,6 +1,6 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { createScrollMagnet } from './cave/scrollChoreography'
+import { createScrollAssist } from './cave/scrollChoreography'
 import { U_ARRIVE, U_HOLD, S_CAVE_END, S_MSG_HOLD, S_EXIT_HOLD } from './cave/config'
 import RubyLoader from './RubyLoader'
 import VideoControls from './VideoControls'
@@ -65,7 +65,7 @@ export default function Hero() {
   const sectionRef = useRef(null)
   const overlayRef = useRef(null) // bloc titre (haut) — glisse vers le HAUT au scroll
   const inviteRef = useRef(null) // bulle de Ruby (bas) — s'efface au scroll
-  const magnetRef = useRef(null) // aimant de scroll (clics « Suis-moi » / « Continuer »)
+  const assistRef = useRef(null) // assistance de scroll (clics « Suis-moi » / « Continuer » + settle)
   const videoElRef = useRef(null) // <video> de l'écran démo (partagé par DemoScreen → barre de lecture)
   const onVideoRef = useRef(false) // miroir de onVideo lu dans la boucle de scroll (setState only on change)
   const atPanel1Ref = useRef(false) // miroir de atPanel1 lu dans la boucle de scroll
@@ -92,16 +92,15 @@ export default function Hero() {
     return () => clearInterval(id)
   }, [atPanel1, analyzeMsgs.length])
 
-  // clic « Suis-moi » → on glisse jusqu'à la vidéo démo (l'aimant fait le travail).
-  const followRuby = () => magnetRef.current?.snapTo(U_ARRIVE)
+  // clic « Suis-moi » → on glisse jusqu'à la vidéo démo (glissement programmatique).
+  const followRuby = () => assistRef.current?.snapTo(U_ARRIVE)
   // clic « Break through » (sur la vidéo) → on poursuit : bris de l'écran + croisière
   // jusqu'au bout de grotte. Snap RAPIDE (vitesse haute + plafond de durée court) → le
   // bris est punchy, on ne traîne pas dans la transition.
-  const continueJourney = () => magnetRef.current?.snapTo(S_CAVE_END, 1.0, 1500)
+  const continueJourney = () => assistRef.current?.snapTo(S_CAVE_END, 1.0, 1500)
 
   // « Skip intro » → saut INSTANTANÉ au-delà de la cinématique (même méthode que le
-  // header) : un scroll fluide se ferait rattraper par l'aimant. On atterrit sur la
-  // 1re section lisible (#overview), à p≈1 où plus aucun palier n'est armé.
+  // header). On atterrit sur la 1re section lisible (#overview), à p≈1.
   const skipIntro = () => {
     const el = document.getElementById('overview')
     if (!el) return
@@ -140,16 +139,16 @@ export default function Hero() {
   }, [])
 
   // progression du scroll DANS le hero → pilote l'avancée du rubis (via progress
-  // ref) + l'aimant multi-étapes (toute la dramaturgie est dans scrollChoreography).
+  // ref) + l'assistance de scroll (toute la dramaturgie est dans scrollChoreography).
   useEffect(() => {
     const el = sectionRef.current
     if (!el) return
     let raf = 0
-    const magnet = createScrollMagnet({
+    const assist = createScrollAssist({
       getTotal: () => el.offsetHeight - window.innerHeight,
       getOffsetTop: () => el.offsetTop,
     })
-    magnetRef.current = magnet
+    assistRef.current = assist
     const update = () => {
       raf = 0
       const total = el.offsetHeight - window.innerHeight
@@ -188,12 +187,11 @@ export default function Hero() {
         atLakeRef.current = lk
         setAtLake(lk)
       }
-      // aimant multi-étapes : happe vers le palier suivant (étapes/sens gérés dedans)
-      magnet.maybeSnap(p)
+      // settle : à l'arrêt du geste, recadre en douceur sur la pose toute proche
+      assist.maybeSettle()
     }
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update)
-      magnet.trackVelocity()
     }
     update()
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -201,8 +199,8 @@ export default function Hero() {
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', update)
-      magnet.dispose()
-      magnetRef.current = null
+      assist.dispose()
+      assistRef.current = null
       if (raf) cancelAnimationFrame(raf)
     }
   }, [])
@@ -220,7 +218,7 @@ export default function Hero() {
   return (
     // section haute (3D) : la hauteur sert de "course" de scroll pour traverser
     // la grotte. Sans 3D (mobile/reduced-motion), hauteur d'écran normale.
-    <section id="hero" ref={sectionRef} className={`relative w-full ${use3D ? 'h-[1490vh]' : 'h-svh min-h-[36rem]'}`}>
+    <section id="hero" ref={sectionRef} className={`relative w-full ${use3D ? 'h-[1180vh]' : 'h-svh min-h-[36rem]'}`}>
       {/* tout est épinglé à l'écran pendant qu'on défile la section */}
       <div className="sticky top-0 h-svh w-full overflow-hidden">
         {/* image de repli UNIQUEMENT sans 3D (animations réduites). En 3D, le loader

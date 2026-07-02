@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { TUBE_R, WATER_Y, U_SCREENS, U_END } from './config'
 import { exitPath } from './caveGeometry'
 import { makeNormalTex } from './textures'
+import { getDeviceProfile } from './deviceProfile'
 
 /** Parois rocheuses — UN SEUL tunnel, fait d'UNE SEULE courbe : il suit le TRAJET
  *  (la boucle, de 0 à U_END) puis se PROLONGE par le chemin de sortie (exitPath, la
@@ -24,8 +25,9 @@ export function TunnelWalls({ curve, noise, rockNormal, rockRough }) {
   }, [curve])
 
   const geometry = useMemo(() => {
-    const TUBULAR = 480
-    const RADIAL = 32
+    // maille pilotée par le profil (480×32 desktop, 320×24 mobile) : le déplacement
+    // fbm par sommet et le coût vertex suivent.
+    const { tubeSegments: TUBULAR, tubeRadial: RADIAL } = getDeviceProfile()
     const g = new THREE.TubeGeometry(tunnelCurve, TUBULAR, TUBE_R, RADIAL, false)
     // ÉLARGISSEMENT de la salle vidéo : repéré par DISTANCE MONDE au point de l'écran
     // (la paramétrisation de CE tunnel ≠ celle de la boucle → on ne compare plus u,
@@ -121,20 +123,23 @@ export function TunnelWalls({ curve, noise, rockNormal, rockRough }) {
  *  sheen fresnel sur l'ENVIRONNEMENT seulement. Ne réfléchit pas la scène,
  *  donc aucun reflet du rubis. */
 export function Water() {
-  // PERF : 80×80 au lieu de 110×110 (~12k→~6,5k sommets). Vagues dans le vertex
-  // shader → maille un peu plus grossière, invisible sur l'eau sombre de la grotte.
-  const geom = useMemo(() => new THREE.PlaneGeometry(440, 440, 80, 80), [])
+  // PERF : maille pilotée par le profil (80×80 desktop, 56×56 mobile). Vagues dans le
+  // vertex shader → maille un peu plus grossière, invisible sur l'eau sombre de la grotte.
+  const { waterSegments: WSEG, waterClearcoat: WCC } = getDeviceProfile()
+  const geom = useMemo(() => new THREE.PlaneGeometry(440, 440, WSEG, WSEG), [WSEG])
   const uniforms = useMemo(() => ({ uTime: { value: 0 } }), [])
   const normalA = useMemo(() => {
     const t = makeNormalTex(256, 4, 1.1, 1.5)
     t.repeat.set(8, 8)
     return t
   }, [])
+  // rides du vernis — inutiles quand le profil coupe le clearcoat (mobile)
   const normalB = useMemo(() => {
+    if (!WCC) return null
     const t = makeNormalTex(256, 4, 1.7, 1.2)
     t.repeat.set(15, 15)
     return t
-  }, [])
+  }, [WCC])
 
   // vagues calculées dans le vertex shader → 0 coût CPU, rendu identique
   const onBeforeCompile = useCallback(
@@ -173,8 +178,10 @@ transformed.z += wHeight(position.xy);`,
     uniforms.uTime.value += delta
     normalA.offset.x += delta * 0.014
     normalA.offset.y += delta * 0.009
-    normalB.offset.x -= delta * 0.011
-    normalB.offset.y += delta * 0.015
+    if (normalB) {
+      normalB.offset.x -= delta * 0.011
+      normalB.offset.y += delta * 0.015
+    }
   })
 
   return (
@@ -183,7 +190,9 @@ transformed.z += wHeight(position.xy);`,
         color="#115b5e"
         roughness={0.16}
         metalness={0}
-        clearcoat={1}
+        // vernis coupé par le profil mobile : il double presque le coût par pixel du
+        // plus grand plan de la grotte (l'envMapIntensity porte déjà le reflet)
+        clearcoat={WCC ? 1 : 0}
         clearcoatRoughness={0.14}
         envMapIntensity={2.3}
         // teinte + glow turquoise discret : garantit le rendu turquoise même là où

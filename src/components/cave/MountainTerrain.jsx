@@ -2,6 +2,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { makeRockNormalTex } from './textures'
+import { getDeviceProfile } from './deviceProfile'
 
 /** Terrain de MONTAGNE réel : un anneau (foothills près → hautes cimes au loin)
  *  déplacé verticalement par du bruit RIDGED multifractal → vraies arêtes,
@@ -14,11 +15,11 @@ export function MountainTerrain({ center, noise, baseY, sunDir }) {
     // azimut du soleil = axe du regard : on y plante LA grande montagne centrale
     // (qui cache le soleil) et on abaisse les flancs latéraux.
     const sunAngle = Math.atan2(sunDir.z, sunDir.x)
-    // PERF : maille allégée (~58k→~28k tris). Les montagnes sont lointaines et
-    // délavées par le fog/haze → la finesse perdue est invisible. Génération au
-    // démarrage ~2× plus rapide (moins d'appels de bruit) → moins de à-coup au load.
-    const RINGS = 150 // subdivisions radiales (proche → loin) — maille fine = grain
-    const SEG = 520 // subdivisions angulaires (tour de l'horizon) — silhouette crispe
+    // PERF : maille pilotée par le PROFIL d'appareil (~64k tris desktop, ~32k mobile).
+    // La version précédente avait dérivé à 150×520 = 156k tris — de loin le plus gros
+    // mesh de la scène. Les montagnes sont lointaines et délavées par le fog/haze →
+    // la finesse perdue est invisible, et la génération (bruit par sommet) suit.
+    const { mountainRings: RINGS, mountainSegs: SEG, treeMax: TREE_MAX } = getDeviceProfile()
     const inner = 92 // rapprochées → la montagne LOOME plus grande dans le cadre
     const outer = 900 // chaîne profonde → étagement des crêtes lointaines
     const MAXH = 360 // chaîne d'ensemble plus BASSE → c'est le pic central qui domine
@@ -252,7 +253,9 @@ export function MountainTerrain({ center, noise, baseY, sunDir }) {
     // secteur central visible). Densité plus forte au centre, raréfaction vers la
     // ligne des arbres en haut → lisière naturelle. ~jusqu'à 2000 arbres instanciés.
     const trees = []
-    const TREE_MAX = 650
+    // le semis est PAR SOMMET : une maille moins dense = moins de candidats → on
+    // compense la probabilité pour garder la même densité d'arbres au m².
+    const TREE_DENS = (150 * 520) / ((RINGS + 1) * SEG)
     for (let i = 0; i < count && trees.length < TREE_MAX; i++) {
       const h = heights[i]
       if (h < 10) continue // au-dessus de l'eau
@@ -269,7 +272,7 @@ export function MountainTerrain({ center, noise, baseY, sunDir }) {
       const broad = Math.exp(-(da * da) / (2 * 0.5 * 0.5))
       if (broad < 0.45) continue // secteur central seulement (là où la terre émerge)
       // densité : dense en bas, se clairsème vers la lisière (ligne des arbres)
-      const dens = broad * (1 - THREE.MathUtils.smoothstep(alt, 0.2, 0.36)) * 0.24
+      const dens = broad * (1 - THREE.MathUtils.smoothstep(alt, 0.2, 0.36)) * 0.24 * TREE_DENS
       if (Math.random() > dens) continue
       trees.push({
         x: x + (Math.random() - 0.5) * 9,
@@ -294,9 +297,11 @@ export function MountainTerrain({ center, noise, baseY, sunDir }) {
   // normal map de ROCHE (ridged) → relief de surface fin (strates, fissures) qui
   // accroche la lumière rasante → la montagne paraît rocheuse et non lisse.
   const rockNormal = useMemo(() => {
-    // 512 (et NON 768) : DOIT matcher la taille demandée par CaveScene → même clé de
+    // profile.texSize : DOIT matcher la taille demandée par CaveScene → même clé de
     // cache, le bruit n'est calculé qu'une fois et partagé entre grotte et montagnes.
-    const t = makeRockNormalTex(512)
+    // (Avant : 512 codé en dur → sur mobile, où CaveScene demande 384, le bruit —
+    // poste n°1 de l'init — était calculé DEUX fois.)
+    const t = makeRockNormalTex(getDeviceProfile().texSize)
     t.repeat.set(1, 1) // échelle portée par le triplanar (coords monde)
     return t
   }, [])

@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // DRAMATURGIE DU SCROLL — source unique de toute la séquence pilotée au scroll.
 // Avant, la même chronologie était dupliquée à deux endroits qui devaient rester
-// d'accord : le mapping scroll→scène (ScrollDriver, dans CaveScene) ET l'aimant
+// d'accord : le mapping scroll→scène (ScrollDriver, dans CaveScene) ET l'assistance
 // de scroll (Hero). Ici tout part des MÊMES seuils (config.js) :
-//   1. sampleTimeline(p)  : ce que la SCÈNE doit afficher pour une progression p
-//   2. SNAP_STAGES        : les paliers où l'aimant emmène / bloque
-//   3. createScrollMagnet : le contrôleur DOM qui exécute l'aimant
+//   1. sampleTimeline(p)   : ce que la SCÈNE doit afficher pour une progression p
+//   2. SETTLE_POSES        : les poses de lecture (vidéo, panneaux, lac)
+//   3. createScrollAssist  : le contrôleur DOM (glissements guidés + settle)
 //
 // Toute la séquence, vidéo de départ comprise :
 //   trajet → PAUSE vidéo → BRIS de l'écran → croisière → PAUSE msg 1 (bout de
@@ -81,168 +81,127 @@ export function sampleTimeline(p) {
   return { u, brk, exit }
 }
 
-// ── AIMANT MULTI-ÉTAPES ───────────────────────────────────────────────────────
-// À chaque swipe, l'aimant prolonge le geste jusqu'à la cible de l'étape courante.
-// `from`/`to` sont des progressions p. CLÉ : l'aimant ne s'arme qu'APRÈS `from`,
-// donc chaque `from` est placé à la FIN d'une pause de lecture → l'utilisateur peut
-// scroller librement DANS la pause (zone morte) avant d'être happé vers la suite.
-//  1) seuil BAS exprès → suffit du 1er coup → vidéo plein cadre.
-//  2) `from` = fin de la PAUSE vidéo (U_HOLD) → traverse le bris et descend au bout
-//     de grotte (msg 1). Laisse la vélocité s'établir avant la prise de l'aimant.
-//  3) `from` = fin de la PAUSE msg 1 (S_MSG_HOLD, pas S_CAVE_END) → on s'arrête
-//     VRAIMENT sur le 1er message, puis ce swipe remonte et BLOQUE devant le msg 2.
-//  4) `from` = fin du PALIER msg 2 (S_EXIT_HOLD) → on émerge et BLOQUE sur le lac.
-export const SNAP_STAGES = [
-  { from: U_ARRIVE * 0.06, to: U_ARRIVE },
-  { from: U_HOLD, to: S_CAVE_END },
-  { from: S_MSG_HOLD, to: S_EXIT_RISE },
-  { from: S_EXIT_HOLD, to: S_EXIT_END },
-]
+// ── ASSISTANCE DE SCROLL ──────────────────────────────────────────────────────
+// L'ancien « aimant » confisquait window.scrollY à chaque swipe vers l'avant :
+// animation LINÉAIRE (jusqu'à 3,8 s) puis PIN anti-inertie (scrollTo à chaque frame,
+// jusqu'à 1,5 s). Sur trackpad, l'inertie continuait d'émettre des évènements pendant
+// le pin → la page « se battait » contre le geste = le fameux mouvement imposé.
+//
+// Remplacé par DEUX comportements qui ne prennent JAMAIS la main pendant un geste :
+//   1. snapTo(p)   : glissement PROGRAMMATIQUE (clics « Suis-moi » / « Break
+//                    through »), easing doux, borné court, interrompu net par tout
+//                    input utilisateur.
+//   2. settle      : à l'ARRÊT du scroll (debounce — l'inertie du trackpad émet des
+//                    wheel, donc « arrêt » = inertie morte incluse), si on s'est
+//                    arrêté juste AVANT une pose, on FINIT le geste en douceur
+//                    jusqu'à elle. Modèle CSS scroll-snap « proximity » : assiste le
+//                    cadrage, ne confisque rien.
+//
+// Les poses restent lisibles SANS assistance : chacune est un PLATEAU de la timeline
+// (≥ ~1 écran de scroll, cf. config.js) → même en scroll 100 % libre, la caméra
+// passe par chaque pose et y stationne. Le settle ne fait que soigner le cadrage.
 
-// VITESSE DE L'AIMANT : la durée PROLONGE le geste (durée ∝ distance / vélocité)
-// au lieu d'une durée arbitraire. Bornes LARGES → c'est bien la vélocité du user
-// qui pilote (sauf cas extrêmes).
-const SNAP_MIN_MS = 200 // jamais un saut instantané
-const SNAP_MAX_MS = 3800 // approche au ralenti → la longue croisière RESPIRE (était 2600,
-// catapultait le visiteur sur les grandes traversées → on profite de l'immersion)
-// >1 = l'aimant va PLUS vite que le swipe (emmène franchement), <1 = plus posé.
-const SNAP_SPEED_GAIN = 0.42 // un peu plus posé (était 0.5)
-// MAINTIEN APRÈS SNAP : une fois la pose atteinte, on la PIN (scrollTo chaque frame)
-// tant que l'utilisateur n'a pas relâché — c.-à-d. plus aucun input wheel/touch
-// depuis RELEASE_IDLE_MS. Sinon l'INERTIE d'un 2e swipe (ou d'un fling) traverse le
-// palier juste après le snap et on saute le message sans s'arrêter. Plafonné par
-// MAX_HOLD_MS (garde-fou : un drag continu très long finit par être relâché).
-const RELEASE_IDLE_MS = 110
-const MAX_HOLD_MS = 1500
+// poses de lecture = débuts de plateau (vidéo, panneau 1, panneau 2, lac)
+const SETTLE_POSES = [U_ARRIVE, S_CAVE_END, S_EXIT_RISE, S_EXIT_END]
+const SETTLE_IDLE_MS = 200 // silence d'input requis avant de considérer le geste fini
+const SETTLE_RANGE = 0.028 // portée du rattrapage (en p ≈ 0,3 écran) — au-delà : on n'y touche pas
+const SETTLE_MS = 600 // durée du recadrage (easeOut court → « ça se pose », pas « ça m'emmène »)
 
-/** Contrôleur DOM de l'aimant. Mesure la vélocité de scroll et, quand on entre
- *  vers l'avant dans la plage ]from, to[ d'une étape, anime window.scrollY jusqu'à
- *  la cible (vitesse constante = celle du swipe × gain), PUIS maintient la pose le
- *  temps que l'inertie meure. Ne touche QUE window.scrollY.
+// glissements programmatiques (boutons) : courts et francs — le voyage doit
+// RÉPONDRE au clic, pas cinématiser pendant des secondes.
+const SNAP_MIN_MS = 200
+const SNAP_MAX_MS = 1200
+
+const easeOutCubic = (k) => 1 - (1 - k) ** 3
+const easeInOutCubic = (k) => (k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2)
+
+/** Contrôleur DOM de l'assistance. Ne touche QUE window.scrollY, et uniquement
+ *  quand l'utilisateur ne scrolle PAS (settle à l'arrêt / clic explicite).
  *
  *  - getTotal()     : course de scroll de la section hero (offsetHeight - innerHeight)
  *  - getOffsetTop() : décalage haut de la section dans la page
  *
- *  À câbler : trackVelocity() sur chaque évènement scroll, maybeSnap(p) à chaque
- *  frame d'update, dispose() au démontage. */
-export function createScrollMagnet({ getTotal, getOffsetTop }) {
-  let vel = 0 // px/ms (signé), lissé en EMA
-  let lastY = window.scrollY
-  let lastT = performance.now()
-  let snapping = false // animation d'aimant en cours
-  let holding = false // maintien de la pose après l'aimant (absorbe l'inertie)
-  let snapRaf = 0
-  let snapDoneTarget = null // cible de la dernière étape résolue (ne pas re-happer)
+ *  À câbler : maybeSettle() à chaque frame d'update du scroll, dispose() au démontage. */
+export function createScrollAssist({ getTotal, getOffsetTop }) {
+  let gliding = false // glissement (snapTo ou settle) en cours
+  let glideRaf = 0
+  let settleTimer = 0
   let lastInputT = 0 // horodatage du dernier input UTILISATEUR (wheel/touch)
 
-  // SEUL l'input direct (wheel/touch) date un « geste » ; nos scrollTo de pin ne
-  // déclenchent PAS ces évènements → on distingue l'inertie qui meurt (plus d'input)
-  // de notre propre maintien.
+  // SEUL l'input direct (wheel/touch) date un « geste » ; nos scrollTo n'émettent
+  // pas ces évènements → un glissement en cours est interrompu NET dès que
+  // l'utilisateur retouche au scroll. On ne lutte jamais contre le geste.
   const onInput = () => {
     lastInputT = performance.now()
   }
   window.addEventListener('wheel', onInput, { passive: true })
   window.addEventListener('touchmove', onInput, { passive: true })
 
-  // étape active = la 1re dont la cible est encore DEVANT nous (pas atteinte)
-  const findStage = (p) => SNAP_STAGES.find((s) => p < s.to - 0.005) ?? null
-
-  // fin de la prise en main (snap + maintien) : on relâche le scroll au user, en
-  // remettant à zéro la mesure de vélocité (sinon le swipe SUIVANT calcule une
-  // vélocité aberrante → l'aimant d'après part en vrille).
-  const release = (snapTo) => {
-    snapping = false
-    holding = false
-    snapRaf = 0
-    snapDoneTarget = snapTo // désarme cette étape (la suivante s'armera au swipe suivant)
-    vel = 0
-    lastY = window.scrollY
-    lastT = performance.now()
+  const stopGlide = () => {
+    gliding = false
+    if (glideRaf) cancelAnimationFrame(glideRaf)
+    glideRaf = 0
   }
 
-  const runSnap = (snapTo, maxMs = SNAP_MAX_MS) => {
+  const runGlide = (targetP, durMs, ease) => {
     const total = getTotal()
     if (total <= 0) return
-    const targetY = getOffsetTop() + snapTo * total
+    const targetY = getOffsetTop() + targetP * total
     const startY = window.scrollY
     const dist = targetY - startY
-    if (Math.abs(dist) < 1) {
-      snapDoneTarget = snapTo
-      return
-    }
-    // durMs = distance / vitesse (px / (px/ms) = ms) ; mouvement LINÉAIRE → pas de
-    // décélération en fin de course, on prolonge le geste tel quel jusqu'à la cible.
-    // `maxMs` plafonne la durée : par défaut SNAP_MAX_MS (croisière qui respire), mais
-    // un appel programmatique (ex. « Break through ») peut le baisser pour aller vite.
-    const speed = Math.max(Math.abs(vel) * SNAP_SPEED_GAIN, 0.05) // px/ms (évite /0)
-    const durMs = Math.min(maxMs, Math.max(SNAP_MIN_MS, Math.abs(dist) / speed))
+    if (Math.abs(dist) < 1) return
     const t0 = performance.now()
-    snapping = true
+    gliding = true
     const step = () => {
+      // l'utilisateur a repris la main → on lâche immédiatement
+      if (lastInputT > t0) return stopGlide()
       const k = Math.min(1, (performance.now() - t0) / durMs)
-      window.scrollTo(0, startY + dist * k)
+      window.scrollTo(0, startY + dist * ease(k))
       if (k < 1) {
-        snapRaf = requestAnimationFrame(step)
+        glideRaf = requestAnimationFrame(step)
         return
       }
-      // arrivé sur la pose → MAINTIEN : on pin jusqu'à ce que l'utilisateur ait
-      // relâché (inertie morte). L'inertie d'un 2e swipe est ainsi absorbée ICI au
-      // lieu de nous faire traverser le palier et sauter le message.
-      snapping = false
-      holding = true
-      const holdStart = performance.now()
-      const hold = () => {
-        window.scrollTo(0, targetY) // pin sur la pose
-        const now = performance.now()
-        const released = now - lastInputT > RELEASE_IDLE_MS // plus d'input = inertie morte
-        if (released || now - holdStart > MAX_HOLD_MS) {
-          release(snapTo)
-          return
-        }
-        snapRaf = requestAnimationFrame(hold)
-      }
-      hold()
+      stopGlide()
     }
     step()
   }
 
   return {
-    /** mesure la vélocité de scroll (ignorée pendant snap/maintien, où c'est NOUS qui scrollons) */
-    trackVelocity() {
-      if (snapping || holding) return
-      const now = performance.now()
-      const y = window.scrollY
-      const dt = now - lastT
-      if (dt > 0) {
-        vel = vel * 0.65 + ((y - lastY) / dt) * 0.35 // lissage EMA
-        lastY = y
-        lastT = now
-      }
-    },
-    /** Déclenche PROGRAMMATIQUEMENT le glissement vers une progression cible (ex. :
-     *  clic « Suis-moi » → on glisse jusqu'à la vidéo démo). Réutilise runSnap (donc
-     *  aussi le maintien anti-inertie). `speed` en px/ms = vitesse du glissement. */
+    /** Glissement PROGRAMMATIQUE vers une progression cible (ex. : clic « Suis-moi »
+     *  → on glisse jusqu'à la vidéo démo). `speed` en px/ms fixe la durée
+     *  (distance / vitesse), bornée par [SNAP_MIN_MS, maxMs]. */
     snapTo(targetP, speed = 0.45, maxMs = SNAP_MAX_MS) {
-      if (snapping || holding) return
-      vel = Math.max(speed, 0.05)
-      snapDoneTarget = null
-      runSnap(targetP, maxMs)
+      if (gliding) return
+      const total = getTotal()
+      if (total <= 0) return
+      const dist = Math.abs(getOffsetTop() + targetP * total - window.scrollY)
+      const durMs = Math.min(maxMs, Math.max(SNAP_MIN_MS, dist / Math.max(speed, 0.05)))
+      runGlide(targetP, durMs, easeInOutCubic)
     },
-    /** déclenche l'aimant si on entre vers l'avant dans la plage d'une étape */
-    maybeSnap(p) {
-      if (snapping || holding) return // prise en main en cours → on ne re-déclenche pas
-      const s = findStage(p)
-      if (!s) return
-      if (p < s.from) snapDoneTarget = null // ré-armement de cette étape (retour en arrière)
-      // GATE SUR LE SENS : ne happe QUE vers l'avant (vel > 0 = scroll vers le bas).
-      // Sinon, en swipant vers le HAUT on reste dans ]from, to[ et l'aimant se
-      // re-déclenche → « roll back » qui renvoie vers l'avant et empêche de remonter.
-      if (snapDoneTarget !== s.to && p > s.from && p < s.to && vel > 0) runSnap(s.to)
+    /** À appeler à chaque update de scroll : (ré)arme le settle. Quand le flux
+     *  d'évènements s'éteint (inertie comprise), si on s'est arrêté juste AVANT une
+     *  pose, on y glisse en douceur — uniquement VERS L'AVANT, jamais pendant un
+     *  geste, interrompu par tout nouvel input. */
+    maybeSettle() {
+      if (settleTimer) clearTimeout(settleTimer)
+      if (gliding) return
+      settleTimer = setTimeout(() => {
+        settleTimer = 0
+        if (gliding) return
+        const total = getTotal()
+        if (total <= 0) return
+        const p = Math.min(1, Math.max(0, (window.scrollY - getOffsetTop()) / total))
+        // pose la plus proche DEVANT nous, à portée de rattrapage. `p < t` exclut
+        // d'office les plateaux (on y est déjà posé) et tout retour en arrière.
+        const target = SETTLE_POSES.find((t) => p < t && t - p <= SETTLE_RANGE)
+        if (target != null) runGlide(target, SETTLE_MS, easeOutCubic)
+      }, SETTLE_IDLE_MS)
     },
     dispose() {
       window.removeEventListener('wheel', onInput)
       window.removeEventListener('touchmove', onInput)
-      if (snapRaf) cancelAnimationFrame(snapRaf)
+      if (settleTimer) clearTimeout(settleTimer)
+      stopGlide()
     },
   }
 }

@@ -119,11 +119,17 @@ export default function CaveScene({ active = true, scroll, onReady, videoRef, lo
   // MSAA du post-traitement → tient le framerate sur GPU mobile sans changer la scène.
   const profile = useMemo(getDeviceProfile, [])
   // DPR adaptatif : NET par défaut (jusqu'à `dprCap`× sur écran HiDPI → texte des panneaux
-  // piqué au lieu d'un canvas 1× upscalé par le navigateur), retombe à 1 si ça rame.
-  // Plafond = borne le coût GPU (2 desktop / 1.5 mobile) ; sur écran non-Retina HI_DPR
-  // vaut 1 → aucun surcoût.
+  // piqué au lieu d'un canvas 1× upscalé par le navigateur). Plafond = borne le coût GPU
+  // (2 desktop / 1.5 mobile) ; sur écran non-Retina HI_DPR vaut 1 → aucun surcoût.
   const HI_DPR = Math.min((typeof window !== 'undefined' && window.devicePixelRatio) || 1, profile.dprCap)
-  const [dpr, setDpr] = useState(HI_DPR)
+  // QUALITÉ ADAPTATIVE GRADUÉE : le PerformanceMonitor fait évoluer un facteur 0→1
+  // (départ 1 = net). Avant : tout-ou-rien DPR 2↔1 → un seul GROS saut, visible et
+  // souvent insuffisant. Maintenant le DPR descend par paliers de 0,25 et, sous 0,4,
+  // on coupe aussi le MSAA du composer (poste fragment le plus cher) — dégradation
+  // douce, remontée pareille quand le framerate revient.
+  const [perfFactor, setPerfFactor] = useState(1)
+  const dpr = Math.max(1, Math.round((1 + (HI_DPR - 1) * perfFactor) * 4) / 4)
+  const msaa = perfFactor < 0.4 ? 0 : profile.multisampling
   // post-traitement différé : monté seulement APRÈS la 1re image. En capture/debug on
   // le veut tout de suite (rendu déterministe / cadrage fidèle du décor).
   const [showPost, setShowPost] = useState(CAPTURE || DEBUG_LAKE || DEBUG_EXIT != null)
@@ -161,7 +167,7 @@ export default function CaveScene({ active = true, scroll, onReady, videoRef, lo
       dpr={dpr}
       onCreated={() => perfMark('contexte WebGL créé')}
     >
-      <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(HI_DPR)} />
+      <PerformanceMonitor factor={1} onChange={({ factor }) => setPerfFactor(factor)} />
       <color attach="background" args={['#060a10']} />
       <fog attach="fog" args={['#060a10', 12, 155]} />
 
@@ -192,8 +198,9 @@ export default function CaveScene({ active = true, scroll, onReady, videoRef, lo
       </Environment>
 
       {/* post-traitement (Bloom + Vignette) : chunk lazy, monté après la 1re image.
-          MSAA du composer désactivé en profil mobile (multisampling=0). */}
-      <Suspense fallback={null}>{showPost && <CavePost multisampling={profile.multisampling} />}</Suspense>
+          MSAA du composer piloté par le profil (0 sur mobile) ET par le facteur de
+          perf (coupé sous 0,4 quand ça rame vraiment). */}
+      <Suspense fallback={null}>{showPost && <CavePost multisampling={msaa} />}</Suspense>
     </Canvas>
   )
 }

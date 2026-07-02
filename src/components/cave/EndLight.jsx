@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { WATER_Y } from './config'
@@ -10,22 +10,32 @@ export function EndLight({ curve, uRef }) {
   const spot = useRef()
   const target = useRef()
   const fill = useRef()
+  // vecteurs RÉUTILISÉS (même modèle que RubyRig) : getPointAt sans cible alloue
+  // un Vector3 par appel — ×3 par frame, pression GC inutile.
+  const tmp = useMemo(
+    () => ({ ps: new THREE.Vector3(), pt: new THREE.Vector3(), pf: new THREE.Vector3() }),
+    [],
+  )
+  const lastU = useRef(Infinity)
   useFrame(() => {
+    if (!spot.current || !target.current || !fill.current) return
     const base = uRef.current
-    const ps = curve.getPointAt(THREE.MathUtils.clamp(base + 0.14, 0, 1))
+    // la lumière ne dépend QUE de u : pendant les pauses de lecture, la sortie et le
+    // lac, u est figé → rien à repositionner (le seuil fin laisse passer le moindre scroll)
+    if (Math.abs(base - lastU.current) < 1e-4) return
+    lastU.current = base
+    const ps = curve.getPointAt(THREE.MathUtils.clamp(base + 0.14, 0, 1), tmp.ps)
     ps.y = WATER_Y + 7
-    const pt = curve.getPointAt(THREE.MathUtils.clamp(base + 0.34, 0, 1))
+    const pt = curve.getPointAt(THREE.MathUtils.clamp(base + 0.34, 0, 1), tmp.pt)
     pt.y = WATER_Y + 6
-    if (spot.current) spot.current.position.copy(ps)
-    if (target.current) {
-      target.current.position.copy(pt)
-      target.current.updateMatrixWorld()
-      spot.current.target = target.current
-    }
+    spot.current.position.copy(ps)
+    target.current.position.copy(pt)
+    target.current.updateMatrixWorld()
+    spot.current.target = target.current
     // remplissage très faible, lui aussi loin devant (jamais à l'avant)
-    const pf = curve.getPointAt(THREE.MathUtils.clamp(base + 0.22, 0, 1))
+    const pf = curve.getPointAt(THREE.MathUtils.clamp(base + 0.22, 0, 1), tmp.pf)
     pf.y = WATER_Y + 6
-    if (fill.current) fill.current.position.copy(pf)
+    fill.current.position.copy(pf)
   })
   return (
     <group>
