@@ -72,9 +72,9 @@ function ScrollDriver({ scroll, uRef, exitRef, breakRef }) {
     // lissage homogène (tau en secondes) → colle au scroll, moins « caoutchouteux »
     uRef.current = dampN(uRef.current, u, CAM.uTau, delta)
     // bris : lissé COMME le reste (tau court) → l'éclatement des fragments suit le
-    // scroll sans saccader sur les pas de molette/aimant. La garantie « écran cassé
-    // avant que Ruby reparte » tient toujours : Ruby ne lit pas breakRef (sa réappari-
-    // tion dépend de sa position, cf. Ruby.jsx) et la cible reste à 1 toute la croisière.
+    // scroll sans saccader sur les pas de molette. Bris et croisière sont SIMULTANÉS
+    // (Ruby crève l'écran en repartant) ; l'écran est 100 % dispersé avant que la
+    // caméra n'atteigne son plan (garantie dans sampleTimeline).
     breakRef.current = dampN(breakRef.current, brk, CAM.breakTau, delta)
     // sortie : remontée lissée vers le lac (paliers/pauses définis dans la timeline)
     exitRef.current = dampN(exitRef.current, exit, CAM.exitTau, delta)

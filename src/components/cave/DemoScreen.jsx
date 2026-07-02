@@ -107,8 +107,10 @@ export function DemoScreens({ curve, uRef, breakRef, videoRef }) {
   useFrame(() => {
     // fade TARDIF : invisible de loin (on voit la salle), apparaît à l'arrivée
     const a = THREE.MathUtils.clamp((uRef.current - 0.085) / 0.05, 0, 1)
-    // bris : piloté par le scroll (breakRef), indépendant de la position de Ruby
-    // → Ruby reste bloqué à l'écran tant que la vidéo n'est pas brisée à 100%
+    // bris : piloté par le scroll (breakRef), indépendant de la position de Ruby.
+    // Depuis la fusion bris+croisière, Ruby repart PENDANT l'éclatement et traverse
+    // les fragments en vol ; l'écran est entièrement dispersé avant le passage de
+    // la caméra (cf. sampleTimeline).
     const brk = THREE.MathUtils.clamp(breakRef.current, 0, 1)
     const e = brk // déplacement proportionnel au scroll (pas d'accélération)
 

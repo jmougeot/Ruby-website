@@ -45,17 +45,17 @@ export function sampleTimeline(p) {
   } else if (p <= U_HOLD) {
     // PAUSE vidéo : on est sur la vidéo, Ruby figé à l'écran, rien ne casse
     u = U_STOP
-  } else if (p <= U_BREAK) {
-    // BRIS : Ruby reste BLOQUÉ à l'écran ; la vidéo se brise (au scroll) jusqu'à 100%
-    u = U_STOP
-    brk = smooth01((p - U_HOLD) / (U_BREAK - U_HOLD))
   } else if (p <= S_CAVE_END) {
-    // CROISIÈRE : profil TRAPÈZE avec kIn = 0 → PLEINE VITESSE dès le bris (plus de
-    // rampe d'accélération lente : la caméra colle à la vitesse de scroll tout de
-    // suite ; le lissage dampN absorbe le à-coup). kOut = 0.18 → arrêt doux au bout
-    // de grotte (la fin que tu aimes).
-    brk = 1
-    u = U_STOP + trapezoidEase((p - U_BREAK) / (S_CAVE_END - U_BREAK), 0, 0.18) * (U_END - U_STOP)
+    // BRIS + CROISIÈRE SIMULTANÉS : Ruby CRÈVE l'écran en repartant — les fragments
+    // explosent (brk 0→1 sur [U_HOLD, U_BREAK]) pendant que la course reprend, au
+    // lieu de « l'écran se casse tout seul, PUIS Ruby repart » (deux temps figés).
+    // Garantie géométrique : le bris atteint 100 % (U_BREAK) AVANT que la caméra
+    // n'atteigne le plan de l'écran (~31 % de la croisière) → on ne traverse jamais
+    // un écran encore visible ; le rubis, LUI, passe au milieu des éclats en vol.
+    // Profil TRAPÈZE kIn = 0 → pleine vitesse dès U_HOLD (dampN absorbe le à-coup),
+    // kOut = 0.18 → arrêt doux au bout de grotte (la fin que tu aimes).
+    brk = smooth01((p - U_HOLD) / (U_BREAK - U_HOLD))
+    u = U_STOP + trapezoidEase((p - U_HOLD) / (S_CAVE_END - U_HOLD), 0, 0.18) * (U_END - U_STOP)
   } else {
     // bout de grotte atteint : figé sur la courbe, la suite est VERTICALE (sortie)
     brk = 1
