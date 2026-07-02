@@ -2,9 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { screenTransform } from './caveGeometry'
-
-const SCREEN_W = 24
-const SCREEN_H = 13.5
+import { SCREEN_W, SCREEN_H } from './config'
 
 /** Grand écran démo en GRILLE DE FRAGMENTS : solide à l'approche (apparaît en
  *  fondu), puis chaque morceau s'envole quand le rubis le brise. */

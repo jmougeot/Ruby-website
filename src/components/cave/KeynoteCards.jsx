@@ -166,7 +166,7 @@ function drawCard(ctx, W, H, { kicker, title, body }) {
   ctx.letterSpacing = '0px'
 
   // ── corps : paragraphe avec retour à la ligne auto, centré sous l'accroche ──
-  const bodySize = 46
+  const bodySize = 75
   ctx.font = `400 ${bodySize}px Inter, Geist, sans-serif`
   ctx.fillStyle = 'rgba(255,255,255,0.82)'
   const blh = bodySize * 1.34

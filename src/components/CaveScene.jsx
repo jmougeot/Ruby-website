@@ -14,6 +14,7 @@ import { KeynoteCards } from './cave/KeynoteCards'
 import { LakeScene } from './cave/LakeScene'
 import { Atmosphere } from './cave/Atmosphere'
 import { CAPTURE, getCaptureProgress, setCaptureReady } from './cave/capture'
+import { getDeviceProfile } from './cave/deviceProfile'
 
 // (plus de décodeur Draco : le seul modèle, PineTree.glb, est livré non compressé →
 //  zéro aller-retour CDN gstatic au 1er rendu.)
@@ -70,9 +71,11 @@ function ScrollDriver({ scroll, uRef, exitRef, breakRef }) {
     const { u, brk, exit } = sampleTimeline(p)
     // lissage homogène (tau en secondes) → colle au scroll, moins « caoutchouteux »
     uRef.current = dampN(uRef.current, u, CAM.uTau, delta)
-    // bris SANS inertie : garanti 100% PILE à U_BREAK (cf. timeline) → Ruby, bloqué
-    // jusque-là, ne repart jamais avant que la vidéo soit complètement cassée.
-    breakRef.current = brk
+    // bris : lissé COMME le reste (tau court) → l'éclatement des fragments suit le
+    // scroll sans saccader sur les pas de molette/aimant. La garantie « écran cassé
+    // avant que Ruby reparte » tient toujours : Ruby ne lit pas breakRef (sa réappari-
+    // tion dépend de sa position, cf. Ruby.jsx) et la cible reste à 1 toute la croisière.
+    breakRef.current = dampN(breakRef.current, brk, CAM.breakTau, delta)
     // sortie : remontée lissée vers le lac (paliers/pauses définis dans la timeline)
     exitRef.current = dampN(exitRef.current, exit, CAM.exitTau, delta)
   })
@@ -111,10 +114,15 @@ export default function CaveScene({ active = true, scroll, onReady, videoRef, lo
   const uRef = useRef(DEBUG_LAKE ? U_END : U_START) // départ décalé dans la grotte (pas u=0)
   const exitRef = useRef(DEBUG_LAKE ? 1 : 0) // 0→1 : remontée hors de la grotte vers le lac
   const breakRef = useRef(DEBUG_LAKE ? 1 : 0) // 0→1 : bris de l'écran vidéo (piloté par le scroll)
-  // DPR adaptatif : NET par défaut (jusqu'à 2× sur écran HiDPI → texte des panneaux
+  // Profil d'appareil (desktop net vs mobile allégé) décidé UNE fois au montage, comme
+  // `use3D` dans Hero. Pilote DPR, taille des textures, résolution d'environnement et
+  // MSAA du post-traitement → tient le framerate sur GPU mobile sans changer la scène.
+  const profile = useMemo(getDeviceProfile, [])
+  // DPR adaptatif : NET par défaut (jusqu'à `dprCap`× sur écran HiDPI → texte des panneaux
   // piqué au lieu d'un canvas 1× upscalé par le navigateur), retombe à 1 si ça rame.
-  // Plafond 2 = borne le coût GPU ; sur écran non-Retina HI_DPR vaut 1 → aucun surcoût.
-  const HI_DPR = Math.min((typeof window !== 'undefined' && window.devicePixelRatio) || 1, 2)
+  // Plafond = borne le coût GPU (2 desktop / 1.5 mobile) ; sur écran non-Retina HI_DPR
+  // vaut 1 → aucun surcoût.
+  const HI_DPR = Math.min((typeof window !== 'undefined' && window.devicePixelRatio) || 1, profile.dprCap)
   const [dpr, setDpr] = useState(HI_DPR)
   // post-traitement différé : monté seulement APRÈS la 1re image. En capture/debug on
   // le veut tout de suite (rendu déterministe / cadrage fidèle du décor).
@@ -131,19 +139,19 @@ export default function CaveScene({ active = true, scroll, onReady, videoRef, lo
     // 512 plutôt que 768 : la normale est répétée 34×7 → chaque tuile est minuscule à
     // l'écran, la perte de finesse est imperceptible, mais le calcul du bruit (≈14
     // octaves × size²) chute de ~55 %. Coût n°1 de l'init de la scène.
-    const t = makeRockNormalTex(512)
+    const t = makeRockNormalTex(profile.texSize)
     t.repeat.set(34, 7)
-    perfMark(`rockNormal(512) généré (${(performance.now() - t0).toFixed(0)}ms)`)
+    perfMark(`rockNormal(${profile.texSize}) généré (${(performance.now() - t0).toFixed(0)}ms)`)
     return t
-  }, [])
+  }, [profile.texSize])
   const rockRough = useMemo(() => {
     const t0 = performance.now()
-    const t = makeRoughnessTex(512)
+    const t = makeRoughnessTex(profile.texSize)
     t.anisotropy = 8
     t.repeat.set(18, 4)
-    perfMark(`rockRough(512) généré (${(performance.now() - t0).toFixed(0)}ms)`)
+    perfMark(`rockRough(${profile.texSize}) généré (${(performance.now() - t0).toFixed(0)}ms)`)
     return t
-  }, [])
+  }, [profile.texSize])
 
   return (
     <Canvas
@@ -176,15 +184,16 @@ export default function CaveScene({ active = true, scroll, onReady, videoRef, lo
       <KeynoteCards curve={curve} uRef={uRef} exitRef={exitRef} locale={locale} />
       <EndLight curve={curve} uRef={uRef} />
       <RubyRig curve={curve} uRef={uRef} exitRef={exitRef} />
-      <Environment resolution={128} frames={1}>
+      <Environment resolution={profile.envResolution} frames={1}>
         <Lightformer form="circle" intensity={2} color="#5a9cc0" position={[3, 2, -2]} scale={2.5} />
         <Lightformer form="rect" intensity={1.2} color="#dfeaf0" position={[-3, -1, -3]} scale={3} />
         {/* barre froide au-dessus → glint réfléchi sur l'eau (doux) */}
         <Lightformer form="rect" intensity={1.1} color="#cfe6f0" position={[0, 6, -4]} scale={[14, 2, 1]} />
       </Environment>
 
-      {/* post-traitement (Bloom + Vignette) : chunk lazy, monté après la 1re image */}
-      <Suspense fallback={null}>{showPost && <CavePost />}</Suspense>
+      {/* post-traitement (Bloom + Vignette) : chunk lazy, monté après la 1re image.
+          MSAA du composer désactivé en profil mobile (multisampling=0). */}
+      <Suspense fallback={null}>{showPost && <CavePost multisampling={profile.multisampling} />}</Suspense>
     </Canvas>
   )
 }

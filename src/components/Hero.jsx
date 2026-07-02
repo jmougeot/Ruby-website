@@ -320,9 +320,12 @@ export default function Hero() {
             {/* PREUVE SOCIALE EN TÊTE — une seule ligne discrète : avatars empilés +
                 phrase de caution. Volontairement « chuchotée » → ne concurrence ni le
                 CTA ni Ruby. Le détail (citations complètes) vit dans <Testimonials>. */}
+            {/* preuve sociale en tête : masquée sur écrans COURTS (petit tél. / paysage)
+                où titre+sous-titre+CTA remplissent déjà la hauteur → pas de débordement.
+                Réapparaît dès qu'il y a de la place verticale (≥720px). */}
             <motion.div
               variants={item}
-              className="mt-10 flex items-center justify-center gap-2.5 text-xs text-muted"
+              className="mt-10 hidden items-center justify-center gap-2.5 text-xs text-muted [@media(min-height:720px)]:flex"
             >
               <div className="flex -space-x-2">
                 {[...EXTRA_PROOF_FACES, ...TESTIMONIALS.filter((p) => p.photo).map((p) => p.photo)].map(

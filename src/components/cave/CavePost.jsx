@@ -9,10 +9,13 @@ import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 //     plus le 1er rendu → le loader se ferme plus tôt, le glow apparaît juste après.
 // Réglages STRICTEMENT identiques à la version inline d'avant (zéro changement visuel
 // une fois monté).
+//
+// `multisampling` (MSAA du composer) est piloté par le profil d'appareil : 4 sur
+// desktop, 0 sur mobile (poste le plus cher, l'antialias géométrique est déjà off).
 // ─────────────────────────────────────────────────────────────────────────────
-export default function CavePost() {
+export default function CavePost({ multisampling = 4 }) {
   return (
-    <EffectComposer multisampling={4}>
+    <EffectComposer multisampling={multisampling}>
       {/* PERF : sans mipmapBlur → flou en 1 passe au lieu de la pyramide
           downscale/upscale (plusieurs passes plein écran). Halo très légèrement
           plus serré, quasi imperceptible sur fond sombre. */}

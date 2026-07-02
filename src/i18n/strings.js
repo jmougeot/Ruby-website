@@ -74,7 +74,6 @@ export const strings = {
     'testimonials.title': 'Reps are already changing how they sell.',
     'testimonials.subtitle':
       'Early users on what shifts when Ruby coaches them, call after call.',
-    'testimonials.linkedinAria': '{name} on LinkedIn',
 
     // Équipe ({name} est remplacé par le nom du membre)
     'team.kicker': 'Team',
@@ -166,7 +165,6 @@ export const strings = {
     'testimonials.title': 'Des commerciaux changent déjà leur façon de vendre.',
     'testimonials.subtitle':
       'Les premiers utilisateurs racontent ce qui change quand Ruby les coache, appel après appel.',
-    'testimonials.linkedinAria': '{name} sur LinkedIn',
 
     'team.kicker': 'Équipe',
     'team.title': 'L’équipe derrière Ruby.',

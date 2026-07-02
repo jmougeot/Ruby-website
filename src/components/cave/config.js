@@ -13,6 +13,12 @@
 export const TUBE_R = 31 // caverne vaste (≈ ×3) — un peu plus grande avant la vidéo
 export const WATER_Y = -13 // niveau de l'eau (sous l'axe du tunnel)
 
+// ── Écran démo (16:9) — dimensions partagées par DemoScreen (le maillage) et
+//    RubyRig (calcul de la distance caméra qui « contient » la vidéo dans le cadre,
+//    cf. Ruby.jsx : plein largeur sur portrait mobile au lieu d'un bandeau rogné).
+export const SCREEN_W = 24
+export const SCREEN_H = 13.5
+
 // ── Pilotage du scroll ──
 export const LEAD = 0.035 // avance du rubis sur la caméra le long de la courbe
 
@@ -39,6 +45,9 @@ export const CAM = {
   // pilotage du scroll
   uTau: 0.14, // lissage de l'avancée (était ~0.31 → plus court = colle au scroll)
   exitTau: 0.2, // lissage de la remontée (sortie)
+  breakTau: 0.08, // lissage du BRIS de l'écran : court (colle au scroll) mais absorbe les
+  // à-coups des pas de scroll/aimant → l'éclatement des fragments ne saccade plus
+  // (avant : réglé en dur = valeur brute → seul élément non lissé, il « beuguait »)
   // rubis ancré DEVANT la caméra
   rubyAhead: 7.5, // distance devant la caméra (le long du regard)
   rubyDrop: 3, // posé plus bas que l'axe du regard

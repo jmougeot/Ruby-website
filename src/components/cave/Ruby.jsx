@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Trail } from '@react-three/drei'
 import * as THREE from 'three'
-import { WATER_Y, LEAD, U_SCREENS, smooth01, CAM } from './config'
+import { WATER_Y, LEAD, U_SCREENS, smooth01, CAM, SCREEN_W, SCREEN_H } from './config'
 import { screenTransform, damp3, dampN, exitChoreography } from './caveGeometry'
 import { makeGlowTex, makeRingTex } from './textures'
 
@@ -134,8 +134,15 @@ export function RubyRig({ curve, uRef, exitRef }) {
     tmp.follow.copy(camPos).addScaledVector(camTangent, -(CAM.back + wide * CAM.backWide))
     tmp.follow.x += camOffset.x
     tmp.follow.y = WATER_Y + CAM.height + wide * CAM.heightWide + camOffset.y
-    // face à l'écran, plein cadre (pile en face → image droite)
-    tmp.fill.copy(SCREEN.center).addScaledVector(SCREEN.normal, 8.0)
+    // face à l'écran, plein cadre (pile en face → image droite). PAYSAGE (desktop) :
+    // cadrage d'origine, la hauteur remplit le cadre (≈8u) — inchangé. PORTRAIT (mobile) :
+    // la vidéo 16:9 serait rognée sur les côtés → on RECULE pour l'ajuster en LARGEUR
+    // (pleine largeur, bandeau letterboxé, comme une vidéo paysage sur un téléphone).
+    const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)
+    const fillDist = camera.aspect >= 1
+      ? SCREEN_H / 2 / tanV // paysage : ajuste la hauteur (cadrage plein d'origine)
+      : SCREEN_W / 2 / (tanV * camera.aspect) // portrait : ajuste la largeur
+    tmp.fill.copy(SCREEN.center).addScaledVector(SCREEN.normal, fillDist)
     tmp.camGoal.lerpVectors(tmp.follow, tmp.fill, eFocus)
     // SORTIE : 3 poses (A=croisière vivante → B=lecture → C=lac) en 2 segments
     // lissés. L'ARRÊT de lecture = EXACTEMENT la pose B (exr = EXIT.read) ; plus de
