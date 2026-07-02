@@ -4,7 +4,7 @@ date: 2026-06-08
 author: "L'équipe Ruby"
 category: "Coaching"
 excerpt: "Le coaching est souvent vu comme un coût « soft », difficile à justifier. Les chiffres disent l'inverse : c'est l'un des leviers les plus rentables d'une équipe de vente. Démonstration, calcul du ROI à l'appui."
-image: /assets/blog/roi-coaching.svg
+image: /assets/blog/roi-coaching.webp
 ---
 
 Quand le budget se resserre, le coaching commercial est souvent la première ligne qu'on coupe. C'est une erreur de calcul. Les études du secteur convergent vers un chiffre rarement atteint par les autres investissements d'une équipe de vente : un **ROI moyen d'environ 350 %** — autrement dit, plus de **4 € générés pour chaque euro investi**.

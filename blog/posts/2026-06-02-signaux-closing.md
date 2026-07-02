@@ -4,7 +4,7 @@ date: 2026-06-02
 author: "L'équipe Ruby"
 category: "Closing"
 excerpt: "En analysant des milliers d'appels gagnants et perdus, trois signaux reviennent systématiquement chez les commerciaux qui closent. Ils n'ont rien à voir avec le charisme."
-image: /assets/blog/signaux-closing.svg
+image: /assets/blog/signaux-closing.webp
 ---
 
 On attribue souvent le closing au talent : certains « l'ont », d'autres non. C'est faux, et surtout ce n'est pas actionnable. Quand on compare des centaines d'appels qui aboutissent à une signature avec ceux qui se terminent par un « je reviens vers vous », ce ne sont pas des traits de personnalité qui ressortent. Ce sont des **comportements précis, répétables et enseignables**.

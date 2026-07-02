@@ -44,7 +44,7 @@ export default function BlogIndex({ posts }) {
                   <a key={post.url} className="une-row" href={post.url}>
                     {post.data.image && (
                       <div className="une-row__media">
-                        <img src={post.data.image} alt={post.data.title} />
+                        <img src={post.data.image} alt={post.data.title} loading="lazy" decoding="async" />
                       </div>
                     )}
                     <div className="une-row__body">

@@ -4,7 +4,7 @@ date: 2026-05-21
 author: "L'équipe Ruby"
 category: "Prospection"
 excerpt: "La plupart des relances échouent non pas parce qu'elles arrivent trop tôt ou trop tard, mais parce qu'elles n'apportent aucune raison nouvelle de répondre. Voici comment inverser la tendance."
-image: /assets/blog/relances-prospection.svg
+image: /assets/blog/relances-prospection.webp
 ---
 
 « J'ai relancé trois fois, il ne répond plus. » C'est la phrase la plus entendue dans les équipes de prospection. Le réflexe est alors d'en conclure que le prospect n'est pas intéressé. Dans la majorité des cas, c'est une erreur : le problème n'est pas le prospect, c'est la **nature de la relance**.

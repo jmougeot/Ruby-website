@@ -4,7 +4,7 @@ date: 2026-05-09
 author: "L'équipe Ruby"
 category: "Discovery"
 excerpt: "Un bon discovery call ne sert pas à présenter votre produit. Il sert à comprendre si — et pourquoi — le prospect a besoin de changer. Cinq questions suffisent."
-image: /assets/blog/discovery-call.svg
+image: /assets/blog/discovery-call.webp
 ---
 
 Le discovery call est l'étape qui détermine tout le reste du cycle de vente. Pourtant, c'est souvent celle qu'on bâcle le plus : on confond « découverte » avec « démonstration », et on se met à présenter le produit avant d'avoir compris le problème. Résultat, on vend une solution à un besoin qu'on n'a pas qualifié.

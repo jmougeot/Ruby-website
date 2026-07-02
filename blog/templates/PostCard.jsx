@@ -6,7 +6,7 @@ export default function PostCard({ post }) {
     <a className="post-card" href={post.url}>
       {post.data.image && (
         <div className="post-card__media">
-          <img src={post.data.image} alt={post.data.title} />
+          <img src={post.data.image} alt={post.data.title} loading="lazy" decoding="async" />
         </div>
       )}
       <div className="post-card__body">
