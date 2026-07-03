@@ -14,13 +14,19 @@ export function DemoScreens({ curve, uRef, breakRef, videoRef }) {
   // l'écran devient plein cadre (cf. useFrame). loop=false → elle joue une fois.
   const gl = useThree((s) => s.gl)
   const tex = useMemo(() => {
+    // preload 'metadata' (et non 'auto') : 'auto' téléchargeait les 1,6 Mo de
+    // demo.mp4 PENDANT le chargement de la page, en concurrence avec les chunks JS
+    // et les textures (1er poste du payload réseau Lighthouse). 'metadata' ne prend
+    // que l'en-tête + la 1re frame (l'écran affiche quand même son image à
+    // l'approche) ; le buffering complet est déclenché au 1er scroll (cf. useFrame),
+    // ~15-20 s avant que la lecture ne démarre.
     const video = Object.assign(document.createElement('video'), {
       src: '/demo.mp4',
       crossOrigin: 'anonymous',
       muted: true,
       loop: false,
       playsInline: true,
-      preload: 'auto',
+      preload: 'metadata',
     })
     const t = new THREE.VideoTexture(video)
     t.colorSpace = gl.outputColorSpace // couleurs identiques à drei (= sortie du renderer)
@@ -44,6 +50,7 @@ export function DemoScreens({ curve, uRef, breakRef, videoRef }) {
   const fragRefs = useRef([])
   const playing = useRef(false) // état lecture vidéo (évite de spammer play/pause)
   const started = useRef(false) // a déjà (re)démarré depuis 0 pour cette entrée plein écran
+  const buffering = useRef(false) // a déjà basculé preload metadata → auto (1er scroll)
 
   const place = useMemo(() => screenTransform(curve), [curve])
 
@@ -105,6 +112,13 @@ export function DemoScreens({ curve, uRef, breakRef, videoRef }) {
   }, [tex, videoRef])
 
   useFrame(() => {
+    // BUFFERING DIFFÉRÉ : dès que le voyage commence (uRef bouge — molette ou clic
+    // « Suis-moi »), on passe preload → 'auto' : le navigateur télécharge la vidéo
+    // pendant l'approche (~15-20 s avant la lecture), plus pendant le chargement.
+    if (!buffering.current && uRef.current > 0.055 && tex.image) {
+      buffering.current = true
+      tex.image.preload = 'auto'
+    }
     // fade TARDIF : invisible de loin (on voit la salle), apparaît à l'arrivée
     const a = THREE.MathUtils.clamp((uRef.current - 0.085) / 0.05, 0, 1)
     // bris : piloté par le scroll (breakRef), indépendant de la position de Ruby.

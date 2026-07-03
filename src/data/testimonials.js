@@ -7,7 +7,7 @@
 //  • quote    : verbatim, les mots réels de la personne (on ne traduit pas une
 //               citation réelle). Garde les guillemets/apostrophes typographiques.
 //  • role     : chaîne simple OU { en, fr } (ex. « SDR chez Sunday »).
-//  • photo    : fichier dans /public/team/ (ex. "/team/benjamin.jpg"). "" → initiales.
+//  • photo    : fichier dans /public/team/ (ex. "/team/benjamin.webp"). "" → initiales.
 // ─────────────────────────────────────────────────────────────────────────────
 export const TESTIMONIALS = [
   {
@@ -16,7 +16,7 @@ export const TESTIMONIALS = [
     short: 'Just following Ruby’s coaching has been a game changer.',
     quote:
       'Being able to just follow Ruby’s coaching without having to do anything from my side (e.g. analysing my own calls) has been a game changer for me. The future of learning is clearly in those kinds of tools that change behaviour directly without producing useless reports.',
-    photo: '/team/benjamin.jpg',
+    photo: '/team/benjamin.webp',
   },
   {
     name: 'Dimitri Lefort',
@@ -24,7 +24,7 @@ export const TESTIMONIALS = [
     short: 'I changed the way I sell way faster than before.',
     quote:
       'I can already see the evolution. I changed the way I sell way faster than I was changing before, when I was just listening to different advice from my manager and podcasts.',
-    photo: '/team/dimitri.jpg',
+    photo: '/team/dimitri.webp',
   },
 ]
 

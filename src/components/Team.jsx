@@ -10,8 +10,8 @@ const loc = (val, locale) => (val && typeof val === 'object' ? val[locale] ?? va
 // ─────────────────────────────────────────────────────────────────────────────
 // L'ÉQUIPE — à éditer ici. Une entrée = une carte (photo, rôle, note, liens).
 //
-//  • photo    : dépose le fichier dans /public/team/ (ex. /public/team/jacques.jpg)
-//               puis mets le chemin "/team/jacques.jpg". Laisse "" → repli initiales.
+//  • photo    : dépose le fichier dans /public/team/ (ex. /public/team/jacques.webp)
+//               puis mets le chemin "/team/jacques.webp". Laisse "" → repli initiales.
 //  • note     : 1–2 phrases, ce sur quoi la personne travaille / sa patte.
 //  • linkedin : URL complète (https://www.linkedin.com/in/…). Laisse "" → masqué.
 //  • email    : adresse simple, le lien mailto: est ajouté tout seul. "" → masqué.
@@ -24,7 +24,7 @@ const TEAM = [
       en: 'Centrale engineer with a background in computer science research. He turns hands-on sales intuition into product: Ruby pinpoints your focus area and coaches you, automatically.',
       fr: 'Ingénieur Centrale, issu de la recherche en informatique. Il transforme l’intuition terrain en produit : Ruby identifie ton point de focus et t’accompagne, automatiquement.',
     },
-    photo: '/team/jacques.jpg',
+    photo: '/team/jacques.webp',
     linkedin: 'https://www.linkedin.com/in/jacquesmougeot/',
     email: 'jacques.mougeot@centrale-med.fr',
   },
@@ -35,7 +35,7 @@ const TEAM = [
       en: 'Centrale engineer, former sales rep. She lived the real problem firsthand: knowing her areas to improve but never finding the time to make them stick. That’s where Ruby came from.',
       fr: 'Ingénieure Centrale, ex-sales. Elle a vécu le vrai problème : connaître ses axes de progression sans jamais trouver le temps de les ancrer. C’est de là qu’est né Ruby.',
     },
-    photo: '/team/lumine.jpg',
+    photo: '/team/lumine.webp',
     linkedin: 'https://www.linkedin.com/in/lumine-trentelivres/',
     email: 'lumine.builds@gmail.com',
   },

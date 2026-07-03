@@ -14,7 +14,7 @@ const ease = [0.22, 1, 0.36, 1]
 // témoignages (pas de citation) → on les empile DERRIÈRE les deux avatars de
 // <Testimonials> : rendus en PREMIER, donc peints d'abord et recouverts par les
 // deux autres (-space-x-2, l'ordre DOM = l'ordre de peinture).
-const EXTRA_PROOF_FACES = ['/team/ronan.jpg', '/team/jean.jpg']
+const EXTRA_PROOF_FACES = ['/team/ronan.webp', '/team/jean.webp']
 
 // debug : ?debug=lake (lac) ou ?debug=exit0.18 (remontée figée) fige la scène et
 // masque les calques d'UI (image de repli, voile, texte, loader) → on voit la 3D
@@ -246,11 +246,14 @@ export default function Hero() {
     <section id="hero" ref={sectionRef} className={`relative w-full ${use3D ? 'h-[1280vh]' : 'h-svh min-h-[36rem]'}`}>
       {/* tout est épinglé à l'écran pendant qu'on défile la section */}
       <div className="sticky top-0 h-svh w-full overflow-hidden">
-        {/* image de repli UNIQUEMENT sans 3D (animations réduites). En 3D, le loader
-            puis la scène couvrent tout l'écran → plus d'image qui transparaît. */}
+        {/* image de repli UNIQUEMENT sans 3D (animations réduites). MÊME fichier que
+            le poster de chargement (hero-first-frame.jpg) : le prérendu injecte ce
+            chemin `use3D=false` dans le HTML statique → comme le poster est déjà
+            préchargé (index.html), l'image du prérendu ne coûte AUCUNE requête en
+            plus (avant : hero-cave.jpg, 121 Ko téléchargés puis remplacés au montage). */}
         {!use3D && (
           <img
-            src="/hero-cave.jpg"
+            src="/hero-first-frame.jpg"
             alt=""
             aria-hidden="true"
             className={`absolute inset-0 h-full w-full object-cover ${reduce ? '' : 'kenburns'}`}

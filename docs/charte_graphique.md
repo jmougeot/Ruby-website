@@ -112,7 +112,7 @@ Disque glossy construit en `radial-gradient` (highlight blanc décentré + rampe
 
 ### c. L'orbe
 
-Variante animée de la gemme : une texture rubis (`ruby-orb.png`) qui **tourne** sous un masque circulaire, surmontée d'un reflet spéculaire **fixe**. C'est la présence vivante de Ruby dans l'UI.
+Variante animée de la gemme : une texture rubis (`ruby-orb.webp`) qui **tourne** sous un masque circulaire, surmontée d'un reflet spéculaire **fixe**. C'est la présence vivante de Ruby dans l'UI.
 
 ### Le fil rouge
 
