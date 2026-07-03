@@ -239,6 +239,16 @@ export default function Hero() {
     hidden: { opacity: 0, y },
     show: { opacity: 1, y: 0, transition: { duration: 0.85, ease } },
   }
+  // TITRE = élément LCP (le poster plein écran est exclu du LCP par Chrome). Il ne
+  // doit JAMAIS passer par opacity:0 : un élément transparent ne compte pas comme
+  // « peint » → le LCP glissait à la fin du fondu (mesuré : +11 s de render delay
+  // sur mobile émulé, aggravé par la bascule EN→FR au montage). En n'animant que le
+  // transform (glissement), le titre est « peint » dès la 1re frame du montage —
+  // même mouvement, LCP au plus tôt.
+  const itemTitle = {
+    hidden: { y },
+    show: { y: 0, transition: { duration: 0.85, ease } },
+  }
 
   return (
     // section haute (3D) : la hauteur sert de "course" de scroll pour traverser
@@ -332,7 +342,7 @@ export default function Hero() {
             className="mx-auto flex max-w-3xl flex-col items-center text-center"
           >
             <motion.h1
-              variants={item}
+              variants={itemTitle}
               className="max-w-3xl text-balance text-[clamp(2.25rem,5.5vw,3.75rem)] font-medium leading-[1.05] tracking-tight"
             >
               {t('hero.title')}
