@@ -42,7 +42,7 @@ try {
       'base64',
     )
 
-  writeFileSync('public/rock-normal.webp', await bake(`m.makeRockNormalTex(${SIZE})`, 0.9))
+  writeFileSync('public/rock-normal.webp', await bake(`m.makeRockNormalTex(${SIZE})`, 0.8))
   writeFileSync('public/rock-rough.webp', await bake(`m.makeRoughnessTex(${SIZE})`, 0.85))
   console.log('✅ public/rock-normal.webp + public/rock-rough.webp cuits à', SIZE)
 } finally {

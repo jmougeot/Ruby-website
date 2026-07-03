@@ -40,14 +40,19 @@
 
     <!-- POSTER du hero (1re frame du voyage 3D) : affiché instantanément à la place
          de l'ancien écran de chargement → à précharger en priorité (c'est le LCP). -->
-    <link rel="preload" href="/hero-first-frame.jpg" as="image" fetchpriority="high" />
+    <link rel="preload" href="/hero-first-frame.webp" as="image" fetchpriority="high" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
-      rel="stylesheet"
-    />
+    <!-- POLICES AUTO-HÉBERGÉES (déclarées dans src/index.css) : l'ancienne chaîne
+         googleapis (CSS) → gstatic (woff2) coûtait ~1,4 s sur le chemin critique.
+         Fichiers VARIABLES : un seul woff2 par famille couvre tous les poids. -->
+    <link rel="preload" href="/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!-- TEXTURES DE ROCHE pré-cuites : la 1re frame 3D les ATTEND (loading manager),
+         mais sans preload elles ne partaient qu'après le téléchargement + parse du
+         chunk CaveScene → les précharger fait « prendre vie » la grotte plus tôt. -->
+    <link rel="preload" href="/rock-normal.webp" as="image" />
+    <link rel="preload" href="/rock-rough.webp" as="image" />
 
     <!-- Données structurées (schema.org) : aide Google à comprendre la marque,
          le site et le produit → éligibilité aux résultats enrichis. -->

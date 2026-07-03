@@ -247,13 +247,13 @@ export default function Hero() {
       {/* tout est épinglé à l'écran pendant qu'on défile la section */}
       <div className="sticky top-0 h-svh w-full overflow-hidden">
         {/* image de repli UNIQUEMENT sans 3D (animations réduites). MÊME fichier que
-            le poster de chargement (hero-first-frame.jpg) : le prérendu injecte ce
+            le poster de chargement (hero-first-frame.webp) : le prérendu injecte ce
             chemin `use3D=false` dans le HTML statique → comme le poster est déjà
             préchargé (index.html), l'image du prérendu ne coûte AUCUNE requête en
             plus (avant : hero-cave.jpg, 121 Ko téléchargés puis remplacés au montage). */}
         {!use3D && (
           <img
-            src="/hero-first-frame.jpg"
+            src="/hero-first-frame.webp"
             alt=""
             aria-hidden="true"
             className={`absolute inset-0 h-full w-full object-cover ${reduce ? '' : 'kenburns'}`}
@@ -284,7 +284,7 @@ export default function Hero() {
             ni les clics ni la parallaxe souris une fois effacé. */}
         {use3D && !HIDE_UI && (
           <img
-            src="/hero-first-frame.jpg"
+            src="/hero-first-frame.webp"
             alt=""
             aria-hidden="true"
             className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
