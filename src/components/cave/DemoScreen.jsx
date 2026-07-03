@@ -116,18 +116,27 @@ export function DemoScreens({ curve, uRef, breakRef, videoRef }) {
 
     // PLEIN ÉCRAN : la caméra a plongé face à l'écran (même seuil `focus` que
     // Ruby.jsx). La vidéo NE SE LANCE qu'à ce moment-là — et DEPUIS LE DÉBUT — au lieu
-    // de tourner en boucle en fond depuis l'arrivée. On la coupe une fois l'écran brisé.
+    // de tourner en boucle en fond depuis l'arrivée. On la coupe DÈS que le bris
+    // commence (et non à brk≥0.999) : chaque frame vidéo décodée = un upload GPU
+    // 1920×1080 (three passe par requestVideoFrameCallback), qui tombait PILE pendant
+    // le moment le plus chargé (fragments en vol + caméra pleine vitesse) → frames de
+    // 150-200 ms mesurées au swipe post-vidéo. Sur l'écran figé, l'image gelée pendant
+    // l'éclatement est invisible ; si on re-scrolle en arrière (brk→0), elle repart.
     const focus = THREE.MathUtils.clamp((uRef.current - 0.09) / 0.045, 0, 1)
     const atFull = focus > 0.98
     if (!atFull) started.current = false // sorti du plein cadre (retour arrière) → réarme
-    const shouldPlay = atFull && brk < 0.999
+    const shouldPlay = atFull && brk < 0.02
     const vid = tex.image
     if (vid && playing.current !== shouldPlay) {
       playing.current = shouldPlay
       if (shouldPlay) {
         if (!started.current) {
           started.current = true
-          try { vid.currentTime = 0 } catch { /* pas encore seekable */ }
+          // seek UNIQUEMENT si la vidéo a déjà avancé : un currentTime=0 sur une vidéo
+          // déjà à 0 force quand même un seek décodeur (~200 ms de stall à l'arrivée).
+          if (vid.currentTime > 0.05) {
+            try { vid.currentTime = 0 } catch { /* pas encore seekable */ }
+          }
         }
         vid.play?.().catch(() => {})
       } else {

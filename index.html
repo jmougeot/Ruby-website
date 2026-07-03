@@ -38,6 +38,10 @@
     />
     <meta name="twitter:image" content="https://www.rubysignal.com/og-card.jpg" />
 
+    <!-- POSTER du hero (1re frame du voyage 3D) : affiché instantanément à la place
+         de l'ancien écran de chargement → à précharger en priorité (c'est le LCP). -->
+    <link rel="preload" href="/hero-first-frame.jpg" as="image" fetchpriority="high" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

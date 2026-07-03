@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { U_END, LAKE_Y, EXIT_HOLD } from './config'
 import { caveReadPose, exitChoreography } from './caveGeometry'
@@ -179,6 +179,7 @@ function drawCard(ctx, W, H, { kicker, title, body }) {
 /** Texture canvas haute résolution de la carte. Redessine quand Geist est prête
  *  (sinon la 1re frame tombe sur la police de repli). */
 function useCardTexture(content) {
+  const gl = useThree((s) => s.gl)
   const tex = useMemo(() => {
     // dessin AUTEUR en coordonnées base (2048) ; raster à base×DPR (→ 4096 sur
     // Retina desktop) pour suivre le framebuffer monté à 2× → texte piqué même quand
@@ -201,6 +202,11 @@ function useCardTexture(content) {
     const render = () => {
       drawCard(ctx, BASE_W, BASE_H, content)
       t.needsUpdate = true
+      // UPLOAD GPU IMMÉDIAT : 4096×2304 (+ mipmaps) ≈ 100 ms d'upload. Sans ça, il
+      // était payé au 1er draw de la carte — c.-à-d. en PLEINE montée du puits pour
+      // la carte 2 (hitch mesuré ~117-150 ms à p≈0.70). Ici il tombe au montage /
+      // au chargement de la police, pendant que le loader couvre encore l'écran.
+      gl.initTexture(t)
     }
     render()
     if (typeof document !== 'undefined' && document.fonts?.load) {
@@ -212,7 +218,7 @@ function useCardTexture(content) {
     // redessine quand le CONTENU change (bascule de langue) → la signature couvre
     // kicker + titre (tableau) + proof-point.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(content)])
+  }, [gl, JSON.stringify(content)])
   useEffect(() => () => tex.dispose(), [tex])
   return tex
 }

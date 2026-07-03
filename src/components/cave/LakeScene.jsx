@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import { U_END, LAKE_Y, smooth01 } from './config'
 import { makeNormalTex } from './textures'
@@ -81,7 +82,45 @@ transformed.z += sin(position.x*0.04 + uTime*0.4)*0.5 + sin(position.y*0.05 - uT
     [uniforms],
   )
 
-  useFrame((_, delta) => {
+  // ── PRÉ-CHAUFFAGE (une fois, derrière le loader) ──────────────────────────
+  // La 1re frame où le lac devenait visible (exit > 0.002, en pleine montée du
+  // puits) payait TOUT d'un coup : compilation des shaders montagne/ciel/nuages/
+  // eau, upload des géométries (~58k tris + forêt instanciée) ET recompilation
+  // des matériaux de la grotte (les 4 lumières du lac entrent dans le graphe →
+  // le « light hash » de tous les programmes change) → hitch mesuré ~150 ms en
+  // pleine montée. Ici, à la même cadence que FirstFrame (2 frames après la fin
+  // du chargement — les arbres GLB sont montés, le loader couvre encore l'écran
+  // ≥ 500 ms), on rend UNE frame avec tout le sous-arbre du lac forcé visible et
+  // le frustum culling coupé (les nuages ont leur propre gating interne, et vu
+  // depuis la grotte une partie du lac serait hors champ) → tout est compilé /
+  // uploadé pendant le loader, la montée n'a plus rien à payer.
+  const warmed = useRef(false)
+  const warmFrames = useRef(0)
+
+  useFrame((state, delta) => {
+    if (!warmed.current && root.current) {
+      const { active, total } = useProgress.getState()
+      if (active && total > 0) {
+        warmFrames.current = 0 // assets encore en vol → on attend
+      } else if (++warmFrames.current >= 2) {
+        warmed.current = true
+        const t0 = performance.now()
+        const restore = []
+        root.current.traverse((o) => {
+          restore.push([o, o.visible, o.frustumCulled])
+          o.visible = true
+          o.frustumCulled = false
+        })
+        state.gl.render(state.scene, state.camera) // rendu caché derrière le loader
+        restore.forEach(([o, v, f]) => {
+          o.visible = v
+          o.frustumCulled = f
+        })
+        // même convention que le flag ?perf de CaveScene
+        if (window.location.search.includes('perf'))
+          console.log(`[perf] +${performance.now().toFixed(0)}ms — lac pré-chauffé (${(performance.now() - t0).toFixed(0)}ms)`)
+      }
+    }
     // PERF : toute la scène du lac (montagnes ~58k tris, ciel, oiseaux, brume) n'est
     // RENDUE que pendant la sortie. Dans la grotte (exit≈0) le fog la masque de toute
     // façon → on la retire du rendu. Le seuil bas est invisible (tout est encore noir).
@@ -99,6 +138,24 @@ transformed.z += sin(position.x*0.04 + uTime*0.4)*0.5 + sin(position.y*0.05 - uT
   })
 
   return (
+    <>
+    {/* LUMIÈRES HORS du groupe caché → TOUJOURS dans le graphe (intensité pilotée à 0
+        dans la grotte, donc zéro effet visuel). Si elles n'entraient dans le graphe
+        qu'au flip root.visible, le « light hash » de TOUS les programmes changerait
+        à cet instant → three RELINKE tunnel + eau + rubis + lac en pleine montée du
+        puits (hitch ~120-230 ms mesuré). Le pré-chauffage seul ne suffisait pas :
+        dès le retour à l'état grotte, three DÉTRUIT les programmes de la variante
+        « avec lumières lac » (releaseProgram quand usedTimes tombe à 0) → tout était
+        recompilé au flip réel. Présence constante = un seul état d'éclairage = zéro
+        relink pendant le voyage. */}
+    {/* lumière du jour DANS la cheminée : portée volontairement courte (34) depuis
+        LAKE_Y−40 → atteint au plus y≈−6, BIEN sous la surface (LAKE_Y) → elle
+        n'éclaire plus du tout le centre du lac. */}
+    <pointLight ref={shaft} color="#cfe6ff" intensity={0} distance={34} decay={1.7} position={[END.x, LAKE_Y - 40, END.z]} />
+    <hemisphereLight ref={sky} args={['#dcebff', '#3c4f5c', 0]} />
+    {/* CONTRE-JOUR chaud derrière la chaîne (rim-light) + remplissage froid des ombres */}
+    <directionalLight ref={sun} color="#ffb56e" intensity={0} position={lightPos.toArray()} />
+    <directionalLight ref={fill} color="#93b4dc" intensity={0} position={fillPos.toArray()} />
     <group ref={root} visible={false}>
       {/* ciel : dégradé + halo solaire + NUAGES volumétriques (fbm) dans le shader du dôme */}
       <SkyDome exitRef={exitRef} center={END} sunDir={horizDir} />
@@ -128,14 +185,7 @@ transformed.z += sin(position.x*0.04 + uTime*0.4)*0.5 + sin(position.y*0.05 - uT
       {/* (MistBand retiré : ses sprites blancs non-tonemappés faisaient une tache
           lumineuse au milieu du lac + voilaient le bas de la montagne) */}
       {/* oiseaux : retirés pour l'instant (perf — meshes skinnés animés) */}
-      {/* lumière du jour DANS la cheminée : portée volontairement courte (34) depuis
-          LAKE_Y−40 → atteint au plus y≈−6, BIEN sous la surface (LAKE_Y) → elle
-          n'éclaire plus du tout le centre du lac. */}
-      <pointLight ref={shaft} color="#cfe6ff" intensity={0} distance={34} decay={1.7} position={[END.x, LAKE_Y - 40, END.z]} />
-      <hemisphereLight ref={sky} args={['#dcebff', '#3c4f5c', 0]} />
-      {/* CONTRE-JOUR chaud derrière la chaîne (rim-light) + remplissage froid des ombres */}
-      <directionalLight ref={sun} color="#ffb56e" intensity={0} position={lightPos.toArray()} />
-      <directionalLight ref={fill} color="#93b4dc" intensity={0} position={fillPos.toArray()} />
     </group>
+    </>
   )
 }

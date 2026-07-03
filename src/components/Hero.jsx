@@ -2,7 +2,6 @@ import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { createScrollAssist } from './cave/scrollChoreography'
 import { U_ARRIVE, U_HOLD, S_CAVE_END, S_MSG_HOLD, S_EXIT_HOLD } from './cave/config'
-import RubyLoader from './RubyLoader'
 import VideoControls from './VideoControls'
 import { useWaitlist } from './Waitlist'
 import { useI18n } from '../i18n'
@@ -54,7 +53,8 @@ export default function Hero() {
   })
   const [inView, setInView] = useState(true)
   const [docVisible, setDocVisible] = useState(true)
-  const [ready, setReady] = useState(false) // 3D a rendu sa 1re image → ferme le loader
+  const [ready, setReady] = useState(false) // 3D a rendu sa 1re image → efface le poster
+  const [gaveUp, setGaveUp] = useState(false) // garde-fou : la 3D n'est jamais venue (WebGL KO)
   const [start3D, setStart3D] = useState(false) // montage 3D retardé (cf. effet ci-dessous)
   // salut de Ruby (bas du hero) : 'off' → 'hello' (« Bonjour ») → 'follow' (« Suis-moi », cliquable)
   const [greet, setGreet] = useState('off')
@@ -71,6 +71,31 @@ export default function Hero() {
   const atPanel1Ref = useRef(false) // miroir de atPanel1 lu dans la boucle de scroll
   const atLakeRef = useRef(false) // miroir de atLake lu dans la boucle de scroll
   const progress = useRef(0) // 0→1 sur toute la hauteur du hero (piloté par le scroll)
+
+  // ── POSTER DE CHARGEMENT (remplace l'ancien écran de chargement RubyLoader) ──
+  // La 1re frame du voyage (image statique, capturée à p=0 via poster-shot) s'affiche
+  // INSTANTANÉMENT ; la 3D se charge derrière et, à sa 1re image (ready), le poster
+  // s'efface en fondu → l'eau se met à bouger, la grotte « prend vie ». Le scroll
+  // reste verrouillé tant que le poster couvre (sinon on défilerait 12 écrans sur une
+  // image figée) ; si la 3D ne vient jamais (WebGL KO), le poster RESTE (c'est l'image
+  // de repli) mais le scroll est rendu au bout de 15 s.
+  const posterUp = use3D && !HIDE_UI && !ready && !gaveUp
+  useEffect(() => {
+    const t = setTimeout(() => setGaveUp(true), 15000)
+    return () => clearTimeout(t)
+  }, [])
+  useEffect(() => {
+    if (!posterUp) return
+    const body = document.body.style.overflow
+    const html = document.documentElement.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    window.scrollTo(0, 0)
+    return () => {
+      document.body.style.overflow = body
+      document.documentElement.style.overflow = html
+    }
+  }, [posterUp])
 
   // séquence du salut : à l'ouverture de la scène (ready), Ruby dit bonjour, puis
   // après quelques secondes propose « Suis-moi » (cliquable).
@@ -250,8 +275,20 @@ export default function Hero() {
           </Safe3D>
         )}
 
-        {/* écran de chargement classe (noir + ruby) tant que la 3D charge */}
-        {use3D && !HIDE_UI && <RubyLoader ready={ready} />}
+        {/* POSTER — 1re frame du voyage en image : couvre le canvas jusqu'à la 1re
+            image 3D (ready), puis s'efface en fondu. Si la 3D ne vient jamais, il
+            reste affiché (image de repli). Toujours pointer-events-none → ne bloque
+            ni les clics ni la parallaxe souris une fois effacé. */}
+        {use3D && !HIDE_UI && (
+          <img
+            src="/hero-first-frame.jpg"
+            alt=""
+            aria-hidden="true"
+            className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+              ready ? 'opacity-0' : 'opacity-100'
+            }`}
+          />
+        )}
 
         {/* voile : sombre en haut (lisibilité header) + sombre en bas (texte) */}
         {!HIDE_UI && (
