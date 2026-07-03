@@ -44,6 +44,24 @@ export function makeNormalTex(size, octaves, baseFreq, strength) {
   return tex
 }
 
+// ── Textures de roche PRÉ-CUITES ─────────────────────────────────────────────
+// Les make* de roche ci-dessous calculent ~420 ms de bruit simplex SUR LE THREAD
+// PRINCIPAL — 1er poste du TBT Lighthouse (caché visuellement par le poster, mais
+// compté, et un clic pendant l'init lague). En prod on charge à la place des WebP
+// CUITS depuis ce même code (scripts/bake-rock-textures.mjs) : décodage d'image
+// hors thread principal + cache HTTP. Les make* restent la SOURCE DE VÉRITÉ :
+// si tu retouches l'algo, relance la cuisson.
+// flipY=false → même orientation mémoire qu'une DataTexture → rendu identique.
+function loadBakedTex(url) {
+  const t = new THREE.TextureLoader().load(url)
+  t.flipY = false
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.anisotropy = 8
+  return t
+}
+export const loadRockNormalTex = () => loadBakedTex('/rock-normal.webp')
+export const loadRockRoughnessTex = () => loadBakedTex('/rock-rough.webp')
+
 // Cache des DONNÉES (pixels) de la normal map de roche, par taille. Le calcul du bruit
 // (≈14 octaves × size² → le plus gros coût d'init de la scène, ~0,6 s à 768) est
 // IDENTIQUE pour les 2 usages (parois de grotte + montagnes) : on ne le fait qu'UNE

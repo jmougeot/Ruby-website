@@ -199,19 +199,23 @@ function useCardTexture(content) {
     const t = new THREE.CanvasTexture(cv)
     t.anisotropy = 16
     t.colorSpace = THREE.SRGBColorSpace
+    // TBT : dessin (canvas 4096×2304) et upload GPU coûtent ~50-100 ms CHACUN. Tout
+    // faire au montage empilait ~6 tâches longues dans l'init (compté par Lighthouse
+    // même caché derrière le poster). On étale donc en IDLE, dessin et upload dans des
+    // tâches séparées. L'upload anticipé reste indispensable : payé au 1er draw de la
+    // carte, c'était un hitch ~117-150 ms en pleine montée du puits (mesuré). Le
+    // timeout borne le report : tout est prêt bien avant le 1er panneau (~15 s de
+    // voyage) même si le navigateur n'a jamais de vraie fenêtre idle.
+    const idle = window.requestIdleCallback ?? ((cb) => setTimeout(cb, 250))
     const render = () => {
       drawCard(ctx, BASE_W, BASE_H, content)
       t.needsUpdate = true
-      // UPLOAD GPU IMMÉDIAT : 4096×2304 (+ mipmaps) ≈ 100 ms d'upload. Sans ça, il
-      // était payé au 1er draw de la carte — c.-à-d. en PLEINE montée du puits pour
-      // la carte 2 (hitch mesuré ~117-150 ms à p≈0.70). Ici il tombe au montage /
-      // au chargement de la police, pendant que le loader couvre encore l'écran.
-      gl.initTexture(t)
+      idle(() => gl.initTexture(t), { timeout: 4000 })
     }
-    render()
+    idle(render, { timeout: 3000 })
     if (typeof document !== 'undefined' && document.fonts?.load) {
       Promise.all([document.fonts.load('600 142px Geist'), document.fonts.load('500 44px Geist')])
-        .then(render)
+        .then(() => idle(render, { timeout: 3000 }))
         .catch(() => {})
     }
     return t

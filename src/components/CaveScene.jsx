@@ -5,7 +5,7 @@ import { createNoise3D } from 'simplex-noise'
 import { CAM, U_START, U_END } from './cave/config'
 import { useTunnelCurve, dampN } from './cave/caveGeometry'
 import { sampleTimeline } from './cave/scrollChoreography'
-import { makeRockNormalTex, makeRoughnessTex } from './cave/textures'
+import { loadRockNormalTex, loadRockRoughnessTex } from './cave/textures'
 import { TunnelWalls, Water } from './cave/Terrain'
 import { EndLight } from './cave/EndLight'
 import { RubyRig } from './cave/Ruby'
@@ -140,24 +140,21 @@ export default function CaveScene({ active = true, scroll, onReady, videoRef, lo
     onReady?.()
     if (!showPost) requestAnimationFrame(() => setShowPost(true))
   }
+  // Textures de roche PRÉ-CUITES (scripts/bake-rock-textures.mjs) : avant, ~420 ms de
+  // bruit simplex bloquaient le thread principal ici (poste n°1 du TBT Lighthouse).
+  // Le chargement passe par le loading manager → FirstFrame attend ces textures, donc
+  // le poster ne s'efface pas avant que les parois aient leur grain.
   const rockNormal = useMemo(() => {
-    const t0 = performance.now()
-    // 512 plutôt que 768 : la normale est répétée 34×7 → chaque tuile est minuscule à
-    // l'écran, la perte de finesse est imperceptible, mais le calcul du bruit (≈14
-    // octaves × size²) chute de ~55 %. Coût n°1 de l'init de la scène.
-    const t = makeRockNormalTex(profile.texSize)
+    const t = loadRockNormalTex()
     t.repeat.set(34, 7)
-    perfMark(`rockNormal(${profile.texSize}) généré (${(performance.now() - t0).toFixed(0)}ms)`)
+    perfMark('rockNormal — chargement du WebP pré-cuit lancé')
     return t
-  }, [profile.texSize])
+  }, [])
   const rockRough = useMemo(() => {
-    const t0 = performance.now()
-    const t = makeRoughnessTex(profile.texSize)
-    t.anisotropy = 8
+    const t = loadRockRoughnessTex()
     t.repeat.set(18, 4)
-    perfMark(`rockRough(${profile.texSize}) généré (${(performance.now() - t0).toFixed(0)}ms)`)
     return t
-  }, [profile.texSize])
+  }, [])
 
   return (
     <Canvas

@@ -1,7 +1,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
-import { makeRockNormalTex } from './textures'
+import { loadRockNormalTex } from './textures'
 import { getDeviceProfile } from './deviceProfile'
 
 /** Terrain de MONTAGNE réel : un anneau (foothills près → hautes cimes au loin)
@@ -297,11 +297,10 @@ export function MountainTerrain({ center, noise, baseY, sunDir }) {
   // normal map de ROCHE (ridged) → relief de surface fin (strates, fissures) qui
   // accroche la lumière rasante → la montagne paraît rocheuse et non lisse.
   const rockNormal = useMemo(() => {
-    // profile.texSize : DOIT matcher la taille demandée par CaveScene → même clé de
-    // cache, le bruit n'est calculé qu'une fois et partagé entre grotte et montagnes.
-    // (Avant : 512 codé en dur → sur mobile, où CaveScene demande 384, le bruit —
-    // poste n°1 de l'init — était calculé DEUX fois.)
-    const t = makeRockNormalTex(getDeviceProfile().texSize)
+    // PRÉ-CUITE (cf. scripts/bake-rock-textures.mjs) : plus de calcul de bruit sur le
+    // thread principal ; même fichier que les parois de la grotte → une seule requête
+    // (cache HTTP), décodage hors thread.
+    const t = loadRockNormalTex()
     t.repeat.set(1, 1) // échelle portée par le triplanar (coords monde)
     return t
   }, [])

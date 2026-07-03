@@ -26,7 +26,7 @@ const DESKTOP = {
   isMobile: false,
   dprCap: 2,
   envResolution: 128,
-  texSize: 512,
+  texSize: 512, // (plus consommé : textures de roche PRÉ-CUITES en WebP, cf. scripts/bake-rock-textures.mjs)
   multisampling: 4,
   cardDprCap: 2, // résolution des textures canvas des cartes keynote (KeynoteCards)
   waterClearcoat: true, // vernis clearcoat sur l'eau — quasi double le coût de shading des plans d'eau
