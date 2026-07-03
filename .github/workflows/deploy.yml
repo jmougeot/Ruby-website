@@ -24,7 +24,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # dernière LTS (support → 2028). Pas la 25 : les versions IMPAIRES de Node
+          # sont des « current » éphémères (~8 mois), pas faites pour la CI.
+          node-version: 24
 
       # Projet unique (React/Vite). `npm run build` = `vite build` (landing → dist/)
       # PUIS `tsx scripts/build-blog.mjs` qui génère le blog statique dans dist/blog/,
