@@ -47,6 +47,46 @@ function blogDev() {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// preloadCave — aplatit la chaîne critique de la 3D au chargement.
+//
+// Les chunks lazy se découvrent en cascade : index.js → react-three-fiber →
+// CaveScene → CavePost (+ PineTree.glb), chaque niveau n'étant demandé qu'après
+// l'exécution du précédent → le dernier ne partait qu'à ~1,7 s (audit Lighthouse).
+// On injecte au build un script inline dans <head> qui les modulepreload dès le
+// HTML : tout se télécharge en parallèle SANS être exécuté — le bundle initial
+// reste donc sans three (invariant perf de la landing).
+//
+// Script inline plutôt que des <link> statiques pour UNE raison : en
+// reduced-motion la 3D ne monte jamais (cf. Hero.jsx), on s'épargne ~330 Ko.
+// ─────────────────────────────────────────────────────────────────────────────
+function preloadCave() {
+  return {
+    name: 'preload-cave',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, ctx) {
+        if (!ctx.bundle) return
+        const chunks = Object.values(ctx.bundle)
+          .filter((c) => c.type === 'chunk' && /react-three-fiber|CaveScene|CavePost/.test(c.fileName))
+          .map((c) => ['/' + c.fileName, 'modulepreload'])
+        if (!chunks.length) return
+        // as="fetch" + crossorigin : doit matcher le fetch de GLTFLoader (mode cors,
+        // credentials same-origin), sinon le preload est ignoré et re-téléchargé.
+        const entries = [...chunks, ['/models/PineTree.glb', 'preload', 'fetch']]
+        const js =
+          "if(!matchMedia('(prefers-reduced-motion: reduce)').matches)" +
+          `for(const[href,rel,as]of ${JSON.stringify(entries)}){` +
+          "const l=document.createElement('link');l.rel=rel;l.href=href;l.crossOrigin='';" +
+          "if(as){l.setAttribute('as',as);l.fetchPriority='low'}" +
+          'document.head.appendChild(l)}'
+        return [{ tag: 'script', children: js, injectTo: 'head' }]
+      },
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), blogDev()],
+  plugins: [react(), tailwindcss(), blogDev(), preloadCave()],
 })
