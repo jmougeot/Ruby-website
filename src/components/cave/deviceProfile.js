@@ -1,60 +1,29 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // PROFIL D'APPAREIL — fichier PUR (AUCUN import `three`, cf. config.js).
 //
-// Décide, au 1er rendu CLIENT, si on sert le rendu 3D « desktop » (net) ou une
-// version ALLÉGÉE pour téléphone (moins de pixels, textures plus petites, pas de
-// MSAA sur le composer). La cinématique reste la même — seuls les curseurs de coût
-// GPU changent, pour tenir le framerate sur un GPU mobile sans chauffer/vider la
-// batterie.
-//
-// SSR : `typeof window` absent → profil DESKTOP par défaut, cohérent avec le prérendu
-// EN de la home (aucune 3D n'y tourne de toute façon). La détection est synchrone,
-// donc `CaveScene` la lit une fois au montage, comme `use3D` dans Hero.
+// Curseurs de coût GPU de la scène 3D. Il n'y a plus qu'UN profil : sur téléphone
+// la 3D ne monte jamais (le hero est remplacé par MobileHero, cf. App.jsx), donc
+// l'ancien profil « mobile allégé » (DPR/textures/MSAA réduits) a été supprimé.
+// La 3D ne tourne que sur desktop/tablette → rendu net partout ; la qualité
+// adaptative (PerformanceMonitor dans CaveScene) reste le seul garde-fou.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Téléphone = pointeur grossier (doigt) ET petit viewport. On EXCLUT volontairement
-// les tablettes larges (≥768) : elles ont un GPU suffisant et bénéficient du rendu net.
-export function isMobileDevice() {
-  if (typeof window === 'undefined') return false
-  const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false
-  return coarse && window.innerWidth < 768
-}
-
-// Curseurs de coût GPU. Point de départ raisonnable — à affiner sur device réel.
 // Uniquement des NOMBRES/booléens (fichier pur) ; chaque fichier 3D lit son curseur.
-const DESKTOP = {
-  isMobile: false,
+const PROFILE = {
   dprCap: 2,
   envResolution: 128,
-  texSize: 512, // (plus consommé : textures de roche PRÉ-CUITES en WebP, cf. scripts/bake-rock-textures.mjs)
   multisampling: 4,
   cardDprCap: 2, // résolution des textures canvas des cartes keynote (KeynoteCards)
   waterClearcoat: true, // vernis clearcoat sur l'eau — quasi double le coût de shading des plans d'eau
   tubeSegments: 480, // TubeGeometry des parois (tubulaire × radial)
   tubeRadial: 32,
   waterSegments: 80, // maille de la nappe d'eau de la grotte (houle en vertex shader)
-  mountainRings: 100, // maille de la montagne du lac (rings × segs ; ~64k tris desktop —
+  mountainRings: 100, // maille de la montagne du lac (rings × segs ; ~64k tris —
   mountainSegs: 320, // l'ancienne 150×520 = 156k tris, invisible de loin sous le fog/haze)
   treeMax: 650, // forêt instanciée (2 draw calls quel que soit le nombre)
   cloudClumps: 18, // touffes de nuages (≈ 6 sprites transparents chacune → overdraw)
 }
-const MOBILE = {
-  isMobile: true,
-  dprCap: 1.5,
-  envResolution: 64,
-  texSize: 384,
-  multisampling: 0,
-  cardDprCap: 1.5,
-  waterClearcoat: false,
-  tubeSegments: 320,
-  tubeRadial: 24,
-  waterSegments: 56,
-  mountainRings: 72, // ≈ 32k tris
-  mountainSegs: 220,
-  treeMax: 350,
-  cloudClumps: 10,
-}
 
 export function getDeviceProfile() {
-  return isMobileDevice() ? MOBILE : DESKTOP
+  return PROFILE
 }

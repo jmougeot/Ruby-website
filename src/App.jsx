@@ -5,6 +5,8 @@ import ScrollThread from './components/ScrollThread'
 import Integrations from './components/Integrations'
 import Team from './components/Team'
 import Footer from './components/Footer'
+import MobileHero from './components/MobileHero'
+import ThreadTwigs from './components/ThreadTwigs'
 import { WaitlistProvider, WaitlistModal, WaitlistForm } from './components/Waitlist'
 import { LocaleProvider, useI18n } from './i18n'
 
@@ -13,6 +15,20 @@ const ease = [0.22, 1, 0.36, 1]
 // ?capture : on masque le header + le fil narratif (UI HTML) pour les captures d'écran
 // de la scène (scripts/shot-at.mjs) → on ne shoote QUE la 3D brute.
 const CAPTURE = typeof window !== 'undefined' && window.location.search.includes('capture')
+
+// TÉLÉPHONE → le voyage 3D est remplacé par un hero minimal (MobileHero) ; le
+// reste de la landing (overview, intégrations, équipe, CTA, footer) est gardé.
+// Téléphone = pointeur tactile ET petit côté d'écran < 768 (attrape aussi le
+// paysage ; exclut les tablettes, qui gardent la 3D). Décidé une fois au
+// chargement (pas de bascule au resize, comme use3D dans Hero). Même critère
+// que le script de modulepreload injecté au build (vite.config.js) : sur
+// téléphone on ne télécharge même pas les chunks three. En SSR (prérendu) →
+// false : le HTML statique garde le hero desktop.
+const PHONE =
+  typeof window !== 'undefined' &&
+  !CAPTURE &&
+  window.matchMedia('(pointer: coarse)').matches &&
+  Math.min(window.screen.width, window.screen.height) < 768
 
 // LocaleProvider EST DANS App → main.jsx (client) ET prerender-home.mjs (SSR) en
 // héritent sans rien changer. En SSR, detectLocale() → 'en' (pas de window) : le
@@ -41,13 +57,16 @@ function Landing() {
       {!CAPTURE && <Header />}
       {!CAPTURE && <ScrollThread />}
       <main>
-        <Hero />
+        {PHONE ? <MobileHero /> : <Hero />}
 
         {/* PONT NARRATIF — la narration (problème → Ruby) lue AU CALME, entre le voyage
             de la grotte et les sections produit. C'est ICI que vivent les 5 lignes,
             plus en sous-titres qui défilaient (illisibles) dans la grotte. */}
-        <section id="overview" className="bg-[#0b0b0d] text-ink">
-          <div className="mx-auto max-w-2xl px-6 py-40 text-center md:py-52">
+        <section id="overview" className="relative overflow-hidden bg-[#0b0b0d] text-ink">
+          {/* le fil conducteur traverse aussi le pont narratif (continuité du courant
+              hero → intégrations), discret derrière le texte */}
+          <div className="thread-soft pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 opacity-40" />
+          <div className="relative mx-auto max-w-2xl px-6 py-40 text-center md:py-52">
             <motion.div
               variants={reveal}
               initial="hidden"
@@ -84,7 +103,8 @@ function Landing() {
           className="relative overflow-hidden"
           style={{ background: 'linear-gradient(to bottom, #0b0b0d 0px, #cfcfce 110px, #f8f8f6 200px)' }}
         >
-          <div className="thread-soft pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 opacity-50" />
+          <div className="thread-soft pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 opacity-40" />
+          <ThreadTwigs className="top-4 opacity-50" phase={3.8} />
           <div className="relative z-10 mx-auto max-w-[1400px] px-6 pb-40 pt-52 text-center">
             <motion.h2
               variants={reveal}

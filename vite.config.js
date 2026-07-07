@@ -57,8 +57,12 @@ function blogDev() {
 // HTML : tout se télécharge en parallèle SANS être exécuté — le bundle initial
 // reste donc sans three (invariant perf de la landing).
 //
-// Script inline plutôt que des <link> statiques pour UNE raison : en
-// reduced-motion la 3D ne monte jamais (cf. Hero.jsx), on s'épargne ~330 Ko.
+// Script inline plutôt que des <link> statiques pour UNE raison : quand la 3D ne
+// monte jamais, on s'épargne ~330 Ko. Deux cas : reduced-motion (cf. Hero.jsx) et
+// TÉLÉPHONE (pointeur tactile + petit côté d'écran < 768 → hero minimal
+// MobileHero, cf. App.jsx — même critère que PHONE).
+// Les textures de roche (rock-*.webp) sont préchargées ici aussi (et plus dans
+// index.html) : elles ne servent qu'à la 1re frame 3D.
 // ─────────────────────────────────────────────────────────────────────────────
 function preloadCave() {
   return {
@@ -74,9 +78,16 @@ function preloadCave() {
         if (!chunks.length) return
         // as="fetch" + crossorigin : doit matcher le fetch de GLTFLoader (mode cors,
         // credentials same-origin), sinon le preload est ignoré et re-téléchargé.
-        const entries = [...chunks, ['/models/PineTree.glb', 'preload', 'fetch']]
+        // Idem pour les images : TextureLoader de three charge en anonymous.
+        const entries = [
+          ...chunks,
+          ['/models/PineTree.glb', 'preload', 'fetch'],
+          ['/rock-normal.webp', 'preload', 'image'],
+          ['/rock-rough.webp', 'preload', 'image'],
+        ]
         const js =
-          "if(!matchMedia('(prefers-reduced-motion: reduce)').matches)" +
+          "if(!matchMedia('(prefers-reduced-motion: reduce)').matches" +
+          "&&!(matchMedia('(pointer: coarse)').matches&&Math.min(screen.width,screen.height)<768))" +
           `for(const[href,rel,as]of ${JSON.stringify(entries)}){` +
           "const l=document.createElement('link');l.rel=rel;l.href=href;l.crossOrigin='';" +
           "if(as){l.setAttribute('as',as);l.fetchPriority='low'}" +

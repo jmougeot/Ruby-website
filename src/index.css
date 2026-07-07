@@ -105,6 +105,76 @@ body {
   );
 }
 
+/* LE COURANT du fil — un éclat qui DESCEND le fil en boucle : la lumière passe
+   de section en section le long de la colonne vertébrale (même langage que les
+   courants du réseau d'intégrations). Fondu aux extrémités pour ne pas déborder
+   des bouts transparents du fil.
+   Ancré sur les fils `absolute` UNIQUEMENT (les colonnes de section) : on ne
+   touche pas à `position` sur .thread-soft — les règles hors-layer écraseraient
+   la classe utilitaire `absolute` (cascade layers Tailwind) → fils en hauteur 0. */
+.thread-soft.absolute::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -16%;
+  width: 3px;
+  height: 90px; /* longueur FIXE → le courant a la même taille dans toutes les sections */
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: linear-gradient(to bottom, transparent, rgba(255, 77, 90, 0.95), transparent);
+  box-shadow: 0 0 8px 1px var(--ruby-glow);
+  opacity: 0;
+  animation: thread-current 6s linear infinite;
+}
+@keyframes thread-current {
+  0% { top: -16%; opacity: 0; }
+  12% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* toile de fond (cf. components/ThreadTwigs.jsx) : fils TRÈS fins (0.5px) qui
+   descendent, un peu plus présents au repos pour qu'on devine la toile. */
+.fil-line {
+  fill: none;
+  stroke: rgba(255, 77, 90, 0.32);
+  stroke-width: 0.5;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+}
+/* petit nœud : segment de longueur nulle à bout rond (vector-effect → point
+   ROND même quand le SVG est étiré en largeur), qui scintille doucement */
+.fil-node {
+  fill: none;
+  stroke: rgba(255, 110, 120, 0.85);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 2px rgba(255, 77, 90, 0.5));
+  animation: thread-pulse 4s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+/* éclat de la toile : ADOUCI par rapport au courant du fil central (plus fin,
+   moins lumineux) — la toile vit en arrière-plan, elle ne rivalise pas. */
+.fil-flow {
+  fill: none;
+  stroke: rgba(255, 90, 100, 0.7);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 2px rgba(255, 77, 90, 0.35));
+  stroke-dasharray: 18 100;
+  stroke-dashoffset: 18;
+  animation: fil-current 6s linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes fil-current {
+  0% { stroke-dashoffset: 18; }
+  22% { stroke-dashoffset: -100; }
+  100% { stroke-dashoffset: -100; }
+}
+
 .video-glow {
   animation: breathe 7s ease-in-out infinite;
 }
@@ -485,34 +555,34 @@ body {
   position: relative;
 }
 
-/* fil au repos : trace ténue du rouge Ruby (le chemin du courant) */
+/* ligne au repos : trace ténue du rouge Ruby (le chemin du courant) */
 .int-wire-base {
   fill: none;
-  stroke: rgba(255, 77, 90, 0.13);
-  stroke-width: 1.5;
+  stroke: rgba(255, 77, 90, 0.14);
+  stroke-width: 1.2;
   stroke-linecap: round;
 }
 
-/* LE COURANT : un segment bref et lumineux qui file du logo vers le cœur.
-   dasharray = [PULSE, longueur du fil] → un seul éclat visible à la fois ;
-   on décale l'offset d'une période complète → l'éclat traverse le fil en boucle. */
+/* LE COURANT : un éclat bref et lumineux qui file le long de la dendrite jusqu'au
+   cœur. Les chemins sont normalisés (pathLength=100) → dasharray/offset uniformes
+   quelle que soit la longueur réelle de la courbe. dasharray = [éclat, reste] →
+   un seul éclat visible ; on décale l'offset d'une période → il traverse en boucle. */
 .int-wire-flow {
   fill: none;
   stroke: var(--color-ruby);
-  stroke-width: 2.5;
+  stroke-width: 1.8;
   stroke-linecap: round;
   filter:
-    drop-shadow(0 0 5px rgba(255, 77, 90, 0.9))
-    drop-shadow(0 0 12px rgba(255, 77, 90, 0.45));
+    drop-shadow(0 0 4px rgba(255, 77, 90, 0.9))
+    drop-shadow(0 0 10px rgba(255, 77, 90, 0.4));
+  stroke-dasharray: 4 100;
   stroke-dashoffset: 0;
-  animation: int-current var(--dur, 2.6s) linear infinite;
+  animation: int-current var(--dur, 2.8s) linear infinite;
   animation-delay: var(--delay, 0s);
 }
 @keyframes int-current {
   to {
-    /* une période complète : PULSE (30px) + longueur du fil → boucle sans couture.
-       --len est en px (unité obligatoire ici, sinon le calc est invalide). */
-    stroke-dashoffset: calc((var(--len) + 30px) * -1);
+    stroke-dashoffset: -104; /* une période complète (éclat 4 + reste 100) → sans couture */
   }
 }
 
@@ -552,7 +622,8 @@ body {
     0 0 30px -4px rgba(255, 40, 80, 0.6);
 }
 
-/* noeud logo disséminé */
+/* nœud logo : PASTILLE VERRE SOMBRE. Le logo est monochrome (masque teinté), gris
+   au repos et il « s'éclaire en rouge » quand le courant part vers son groupe. */
 .int-node {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -560,57 +631,142 @@ body {
 .int-node-circle {
   display: grid;
   place-items: center;
-  width: clamp(3rem, 8vw, 4rem);
-  height: clamp(3rem, 8vw, 4rem);
+  width: clamp(2.7rem, 6vw, 3.6rem);
+  height: clamp(2.7rem, 6vw, 3.6rem);
   border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
     0 8px 24px -12px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  color: var(--color-muted);
-  transition:
-    color 0.4s ease,
-    border-color 0.4s ease,
-    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: border-color 0.4s ease;
 }
 .int-node:hover .int-node-circle {
-  color: var(--color-ink);
   border-color: rgba(255, 77, 90, 0.4);
-  transform: scale(1.06);
 }
-/* le logo (ou wordmark) émet un flash rouge AU DÉPART du courant → il « envoie »
-   la lumière vers Ruby (même durée / même délai que son fil). */
+/* le logo = silhouette monochrome (masque de l'image) que l'on teinte via
+   background-color → gris au repos, flash rouge à l'émission (même délai que son fil). */
 .int-node-logo {
-  width: 52%;
-  height: 52%;
-  animation: int-emit var(--dur, 2.6s) linear infinite;
+  width: 60%;
+  height: 60%;
+  background-color: #b9bac1;
+  -webkit-mask: var(--logo) center / contain no-repeat;
+  mask: var(--logo) center / contain no-repeat;
+  animation: int-emit var(--dur, 3s) linear infinite;
   animation-delay: var(--delay, 0s);
 }
 .int-node-word {
-  font-size: clamp(0.7rem, 1.6vw, 0.82rem);
+  font-size: clamp(0.66rem, 1.5vw, 0.8rem);
   font-weight: 600;
   letter-spacing: -0.01em;
-  animation: int-emit var(--dur, 2.6s) linear infinite;
+  color: #b9bac1;
+  animation: int-emit-word var(--dur, 3s) linear infinite;
   animation-delay: var(--delay, 0s);
 }
+/* flash rouge au départ du courant, puis retour au gris */
 @keyframes int-emit {
-  0% { color: var(--color-ruby); filter: drop-shadow(0 0 6px var(--ruby-glow)); }
-  10% { color: var(--color-ink); filter: none; }
-  24% { color: var(--color-muted); filter: none; }
-  100% { color: var(--color-muted); filter: none; }
+  0% { background-color: var(--color-ruby); filter: drop-shadow(0 0 6px var(--ruby-glow)); }
+  12% { background-color: #f2f2f4; filter: none; }
+  28% { background-color: #b9bac1; filter: none; }
+  100% { background-color: #b9bac1; filter: none; }
+}
+@keyframes int-emit-word {
+  0% { color: var(--color-ruby); text-shadow: 0 0 8px var(--ruby-glow); }
+  12% { color: #f2f2f4; text-shadow: none; }
+  28% { color: #b9bac1; text-shadow: none; }
+  100% { color: #b9bac1; text-shadow: none; }
 }
 .int-node-label {
   position: absolute;
-  top: calc(100% + 0.55rem);
+  top: calc(100% + 0.5rem);
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   letter-spacing: 0.01em;
   color: var(--color-muted);
+}
+
+/* ===========================================================
+   Hero TÉLÉPHONE (MobileHero) — l'esprit de la grotte SANS 3D :
+   l'orbe Ruby flotte au-dessus du titre (halo qui respire) et
+   des étincelles rubis montent du bas de l'écran (la présence
+   de Ruby dans le noir). Aucun three, que du CSS.
+   =========================================================== */
+/* flottement doux de l'orbe (comme le rubis qui lévite dans la grotte) */
+.mh-float {
+  animation: mh-float 6s ease-in-out infinite;
+}
+@keyframes mh-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* halo rouge qui respire derrière l'orbe (même langage que .int-core-halo) */
+.mh-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 11.5rem;
+  height: 11.5rem;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 77, 90, 0.38) 0%,
+    rgba(255, 77, 90, 0.13) 42%,
+    transparent 70%
+  );
+  filter: blur(8px);
+  animation: int-halo 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* l'orbe elle-même : disque /ruby-orb.webp qui tourne (masque) + reflet fixe */
+.mh-orb {
+  position: relative;
+  width: 3.9rem;
+  height: 3.9rem;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+    0 0 36px -4px rgba(255, 40, 80, 0.65),
+    0 0 80px 10px rgba(255, 77, 90, 0.18);
+}
+.mh-orb::after {
+  /* reflet spéculaire du verre — ne tourne pas (posé sur le disque) */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(58% 44% at 32% 24%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 62%);
+  pointer-events: none;
+}
+
+/* étincelle rubis qui monte (poussière lumineuse de la grotte). Position, taille,
+   durée et dérive latérale pilotées par variables (--x, --s, --d, --delay, --sway). */
+.mh-spark {
+  position: absolute;
+  bottom: -6px;
+  left: var(--x);
+  width: var(--s, 3px);
+  height: var(--s, 3px);
+  border-radius: 9999px;
+  background: #ff8a93;
+  box-shadow: 0 0 8px 2px var(--ruby-glow);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: mh-rise var(--d, 10s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes mh-rise {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  8% { opacity: 0.9; }
+  60% { opacity: 0.5; }
+  100% { transform: translateY(-90vh) translateX(var(--sway, 14px)); opacity: 0; }
 }
 
 /* ===========================================================

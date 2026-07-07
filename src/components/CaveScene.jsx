@@ -114,13 +114,12 @@ export default function CaveScene({ active = true, scroll, onReady, videoRef, lo
   const uRef = useRef(DEBUG_LAKE ? U_END : U_START) // départ décalé dans la grotte (pas u=0)
   const exitRef = useRef(DEBUG_LAKE ? 1 : 0) // 0→1 : remontée hors de la grotte vers le lac
   const breakRef = useRef(DEBUG_LAKE ? 1 : 0) // 0→1 : bris de l'écran vidéo (piloté par le scroll)
-  // Profil d'appareil (desktop net vs mobile allégé) décidé UNE fois au montage, comme
-  // `use3D` dans Hero. Pilote DPR, taille des textures, résolution d'environnement et
-  // MSAA du post-traitement → tient le framerate sur GPU mobile sans changer la scène.
+  // Curseurs de coût GPU (DPR, résolution d'environnement, MSAA du post-traitement).
+  // Un seul profil : la 3D ne monte jamais sur téléphone (MobileHero, cf. App.jsx).
   const profile = useMemo(getDeviceProfile, [])
   // DPR adaptatif : NET par défaut (jusqu'à `dprCap`× sur écran HiDPI → texte des panneaux
   // piqué au lieu d'un canvas 1× upscalé par le navigateur). Plafond = borne le coût GPU
-  // (2 desktop / 1.5 mobile) ; sur écran non-Retina HI_DPR vaut 1 → aucun surcoût.
+  // (2) ; sur écran non-Retina HI_DPR vaut 1 → aucun surcoût.
   const HI_DPR = Math.min((typeof window !== 'undefined' && window.devicePixelRatio) || 1, profile.dprCap)
   // QUALITÉ ADAPTATIVE GRADUÉE : le PerformanceMonitor fait évoluer un facteur 0→1
   // (départ 1 = net). Avant : tout-ou-rien DPR 2↔1 → un seul GROS saut, visible et

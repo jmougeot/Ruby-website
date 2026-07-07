@@ -48,17 +48,9 @@
     <link rel="preload" href="/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
 
-    <!-- TEXTURES DE ROCHE pré-cuites : la 1re frame 3D les ATTEND (loading manager),
-         mais sans preload elles ne partaient qu'après le téléchargement + parse du
-         chunk CaveScene → les précharger fait « prendre vie » la grotte plus tôt.
-         crossorigin OBLIGATOIRE : TextureLoader de three charge en anonymous par
-         défaut ; sans lui, le mode de credentials diffère → preload ignoré et
-         fichier téléchargé DEUX fois.
-         fetchpriority=low : elles ne servent qu'à la 1re frame 3D (plusieurs secondes
-         après le LCP) → elles ne doivent pas voler la bande passante du JS critique
-         ni des polices sur connexion lente. -->
-    <link rel="preload" href="/rock-normal.webp" as="image" crossorigin="anonymous" fetchpriority="low" />
-    <link rel="preload" href="/rock-rough.webp" as="image" crossorigin="anonymous" fetchpriority="low" />
+    <!-- TEXTURES DE ROCHE (rock-*.webp) : préchargées par le script inline injecté
+         au build (preloadCave, vite.config.js) avec les chunks 3D — plus ici, pour
+         ne rien télécharger sur téléphone / en reduced-motion où la 3D ne monte pas. -->
 
     <!-- Données structurées (schema.org) : aide Google à comprendre la marque,
          le site et le produit → éligibilité aux résultats enrichis. -->

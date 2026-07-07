@@ -42,8 +42,10 @@ export function useWaitlist() {
  * Formulaire email réutilisable.
  *  - variant="modal"  → empilé (label visible au-dessus), pour la carte claire.
  *  - variant="inline" → ligne (champ + bouton côte à côte), pour le CTA final.
+ *  - onDark → champ « verre sombre » + textes de statut clairs (fond sombre,
+ *    ex. hero téléphone) au lieu du champ blanc pensé pour les surfaces claires.
  */
-export function WaitlistForm({ variant = 'modal', autoFocus = false }) {
+export function WaitlistForm({ variant = 'modal', autoFocus = false, onDark = false }) {
   const { t } = useI18n()
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState('idle') // idle | sending | success | error
@@ -67,7 +69,7 @@ export function WaitlistForm({ variant = 'modal', autoFocus = false }) {
 
   if (status === 'success') {
     return (
-      <p className="text-[15px] font-medium text-night" role="status" aria-live="polite">
+      <p className={`text-[15px] font-medium ${onDark ? 'text-ink' : 'text-night'}`} role="status" aria-live="polite">
         {t('waitlist.success')}
       </p>
     )
@@ -91,12 +93,18 @@ export function WaitlistForm({ variant = 'modal', autoFocus = false }) {
         onChange={(e) => setEmail(e.target.value)}
         placeholder={t('waitlist.placeholder')}
         aria-label={t('waitlist.placeholder')}
-        className="flex-1 rounded-full border border-night/15 bg-white px-5 py-3.5 text-[15px] text-night outline-none transition-colors placeholder:text-night/40 focus:border-ruby"
+        className={`flex-1 rounded-full border outline-none transition-colors focus:border-ruby ${
+          onDark
+            ? 'border-white/15 bg-white/10 px-4 py-2.5 text-[14px] text-ink backdrop-blur-md placeholder:text-ink/40'
+            : 'border-night/15 bg-white px-5 py-3.5 text-[15px] text-night placeholder:text-night/40'
+        }`}
       />
       <button
         type="submit"
         disabled={sending}
-        className="rounded-full bg-ruby px-7 py-3.5 text-[15px] font-medium text-white shadow-[0_0_40px_-6px_var(--ruby-glow)] transition-shadow hover:shadow-[0_0_52px_-4px_var(--ruby-glow)] disabled:opacity-60"
+        className={`rounded-full bg-ruby font-medium text-white shadow-[0_0_40px_-6px_var(--ruby-glow)] transition-shadow hover:shadow-[0_0_52px_-4px_var(--ruby-glow)] disabled:opacity-60 ${
+          onDark ? 'self-center px-5 py-2 text-[13px]' : 'px-7 py-3.5 text-[15px]'
+        }`}
       >
         {sending ? t('waitlist.sending') : t('waitlist.submit')}
       </button>

@@ -41,6 +41,10 @@ export const strings = {
       'Coaching your next improvement…',
     ],
 
+    // Landing téléphone (MobileLanding) — une seule phrase : ce que fait Ruby.
+    'mobile.pitch':
+      "Ruby analyzes your calls, identifies what's holding you back, and helps you improve one habit at a time.",
+
     // Pont narratif (App)
     'overview.0': 'You know you can improve',
     'overview.1': 'The hard part is knowing where to focus',
@@ -136,6 +140,9 @@ export const strings = {
       'On repère ce qui te freine…',
       'On prépare ta prochaine progression…',
     ],
+
+    'mobile.pitch':
+      'Ruby analyse tes appels, repère ce qui te freine et t’aide à progresser, une habitude à la fois.',
 
     'overview.0': 'Tu sais que tu peux progresser',
     'overview.1': 'Le plus dur, c’est de savoir où concentrer tes efforts',

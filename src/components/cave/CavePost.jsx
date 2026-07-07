@@ -10,8 +10,9 @@ import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 // Réglages STRICTEMENT identiques à la version inline d'avant (zéro changement visuel
 // une fois monté).
 //
-// `multisampling` (MSAA du composer) est piloté par le profil d'appareil : 4 sur
-// desktop, 0 sur mobile (poste le plus cher, l'antialias géométrique est déjà off).
+// `multisampling` (MSAA du composer) est piloté par le profil d'appareil (4, coupé
+// à 0 par la qualité adaptative si le framerate plonge — l'antialias géométrique
+// est déjà off).
 // ─────────────────────────────────────────────────────────────────────────────
 export default function CavePost({ multisampling = 4 }) {
   return (

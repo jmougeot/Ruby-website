@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion'
+import ThreadTwigs from './ThreadTwigs'
 import { useI18n } from '../i18n'
 
 const ease = [0.22, 1, 0.36, 1]
@@ -84,7 +85,10 @@ export default function Team() {
 
   return (
     <section id="team" className="relative overflow-hidden bg-[#0b0b0d] text-ink">
+      {/* le fil conducteur traverse la section de part en part (pas de fourche) */}
       <div className="thread-soft pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 opacity-40" />
+      {/* la toile de fond n'apparaît qu'à partir d'ici (team + CTA) */}
+      <ThreadTwigs className="top-4 opacity-50" phase={2.6} />
       <div className="relative z-10 mx-auto max-w-[1400px] px-6 py-32 text-center md:py-40">
         <motion.div
           variants={reveal}
