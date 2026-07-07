@@ -476,6 +476,144 @@ body {
 }
 
 /* ===========================================================
+   Intégrations — constellation : les outils DISSÉMINÉS, reliés
+   au cœur (l'orbe Ruby) par un « courant » de lumière rouge qui
+   remonte du logo jusqu'au centre. (cf. components/Integrations.jsx)
+   Le rouge est celui de la charte (--color-ruby / --ruby-glow).
+   =========================================================== */
+.int-stage {
+  position: relative;
+}
+
+/* fil au repos : trace ténue du rouge Ruby (le chemin du courant) */
+.int-wire-base {
+  fill: none;
+  stroke: rgba(255, 77, 90, 0.13);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+/* LE COURANT : un segment bref et lumineux qui file du logo vers le cœur.
+   dasharray = [PULSE, longueur du fil] → un seul éclat visible à la fois ;
+   on décale l'offset d'une période complète → l'éclat traverse le fil en boucle. */
+.int-wire-flow {
+  fill: none;
+  stroke: var(--color-ruby);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  filter:
+    drop-shadow(0 0 5px rgba(255, 77, 90, 0.9))
+    drop-shadow(0 0 12px rgba(255, 77, 90, 0.45));
+  stroke-dashoffset: 0;
+  animation: int-current var(--dur, 2.6s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes int-current {
+  to {
+    /* une période complète : PULSE (30px) + longueur du fil → boucle sans couture.
+       --len est en px (unité obligatoire ici, sinon le calc est invalide). */
+    stroke-dashoffset: calc((var(--len) + 30px) * -1);
+  }
+}
+
+/* le cœur : orbe Ruby (réutilise .ruby-orb) + halo rouge qui respire */
+.int-core {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+}
+.int-core-halo {
+  position: absolute;
+  width: clamp(9rem, 24vw, 13rem);
+  height: clamp(9rem, 24vw, 13rem);
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 77, 90, 0.34) 0%,
+    rgba(255, 77, 90, 0.12) 42%,
+    transparent 70%
+  );
+  filter: blur(6px);
+  animation: int-halo 6s ease-in-out infinite;
+}
+@keyframes int-halo {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+.int-core-orb {
+  position: relative;
+  width: clamp(3.6rem, 9vw, 5rem);
+  height: clamp(3.6rem, 9vw, 5rem);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+    0 0 30px -4px rgba(255, 40, 80, 0.6);
+}
+
+/* noeud logo disséminé */
+.int-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+.int-node-circle {
+  display: grid;
+  place-items: center;
+  width: clamp(3rem, 8vw, 4rem);
+  height: clamp(3rem, 8vw, 4rem);
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 8px 24px -12px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  color: var(--color-muted);
+  transition:
+    color 0.4s ease,
+    border-color 0.4s ease,
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.int-node:hover .int-node-circle {
+  color: var(--color-ink);
+  border-color: rgba(255, 77, 90, 0.4);
+  transform: scale(1.06);
+}
+/* le logo (ou wordmark) émet un flash rouge AU DÉPART du courant → il « envoie »
+   la lumière vers Ruby (même durée / même délai que son fil). */
+.int-node-logo {
+  width: 52%;
+  height: 52%;
+  animation: int-emit var(--dur, 2.6s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+.int-node-word {
+  font-size: clamp(0.7rem, 1.6vw, 0.82rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  animation: int-emit var(--dur, 2.6s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes int-emit {
+  0% { color: var(--color-ruby); filter: drop-shadow(0 0 6px var(--ruby-glow)); }
+  10% { color: var(--color-ink); filter: none; }
+  24% { color: var(--color-muted); filter: none; }
+  100% { color: var(--color-muted); filter: none; }
+}
+.int-node-label {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  letter-spacing: 0.01em;
+  color: var(--color-muted);
+}
+
+/* ===========================================================
    Accessibilité — on coupe le motion non essentiel
    (cf. docs/charte_graphique.md → Accessibilité)
    =========================================================== */
