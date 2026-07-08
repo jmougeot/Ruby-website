@@ -104,7 +104,7 @@ export function sampleTimeline(p) {
 // poses de lecture = débuts de plateau (vidéo, panneau 1, panneau 2, lac)
 const SETTLE_POSES = [U_ARRIVE, S_CAVE_END, S_EXIT_RISE, S_EXIT_END]
 const SETTLE_IDLE_MS = 200 // silence d'input requis avant de considérer le geste fini
-const SETTLE_RANGE = 0.028 // portée du rattrapage (en p ≈ 0,3 écran) — au-delà : on n'y touche pas
+const SETTLE_RANGE = 0.032 // portée du rattrapage (en p ≈ 0,3 écran) — au-delà : on n'y touche pas
 const SETTLE_MS = 600 // durée du recadrage (easeOut court → « ça se pose », pas « ça m'emmène »)
 
 // glissements programmatiques (boutons) : courts et francs — le voyage doit

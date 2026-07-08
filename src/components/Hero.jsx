@@ -253,7 +253,7 @@ export default function Hero() {
   return (
     // section haute (3D) : la hauteur sert de "course" de scroll pour traverser
     // la grotte. Sans 3D (mobile/reduced-motion), hauteur d'écran normale.
-    <section id="hero" ref={sectionRef} className={`relative w-full ${use3D ? 'h-[1280vh]' : 'h-svh min-h-[36rem]'}`}>
+    <section id="hero" ref={sectionRef} className={`relative w-full ${use3D ? 'h-[1040vh]' : 'h-svh min-h-[36rem]'}`}>
       {/* tout est épinglé à l'écran pendant qu'on défile la section */}
       <div className="sticky top-0 h-svh w-full overflow-hidden">
         {/* image de repli UNIQUEMENT sans 3D (animations réduites). MÊME fichier que
@@ -315,7 +315,7 @@ export default function Hero() {
         )}
 
         {/* SKIP INTRO — échappatoire toujours visible pendant le voyage (le sales
-            pressé / le visiteur de retour ne reste pas piégé dans les ~19 écrans de
+            pressé / le visiteur de retour ne reste pas piégé dans les ~10 écrans de
             cinématique). Disparaît une fois émergé sur le lac (atLake). */}
         {use3D && !HIDE_UI && (
           <button

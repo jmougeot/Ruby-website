@@ -95,6 +95,8 @@ export function RubyRig({ curve, uRef, exitRef }) {
       camGoal: new THREE.Vector3(),
       rubyGoal: new THREE.Vector3(),
       forward: new THREE.Vector3(),
+      camPrev: new THREE.Vector3(),
+      camVel: new THREE.Vector3(),
     }),
     [],
   )
@@ -144,6 +146,21 @@ export function RubyRig({ curve, uRef, exitRef }) {
       : SCREEN_W / 2 / (tanV * camera.aspect) // portrait : ajuste la largeur
     tmp.fill.copy(SCREEN.center).addScaledVector(SCREEN.normal, fillDist)
     tmp.camGoal.lerpVectors(tmp.follow, tmp.fill, eFocus)
+    // REPARTANCE (bris → croisière) : pendant le déverrouillage, `follow` est encore
+    // LOIN DERRIÈRE le point d'arrêt (~21u à l'arrêt : la caméra avait plongé vers
+    // l'écran) → le blend tirait la caméra en ARRIÈRE (~1u de recul mesuré) et sa
+    // composante LATÉRALE (la courbure du tunnel) la faisait osciller gauche-droite
+    // (±0.35u, très visible à 8u de l'écran). Tant que le blend n'a pas rattrapé le
+    // point d'arrêt le long de l'axe du tunnel, on ÉPINGLE la caméra sur la pose
+    // écran : parfaitement immobile face aux fragments, puis elle CHARGE — toute la
+    // convergence (latérale + verticale) se fait pendant l'avancée, où elle est noyée
+    // dans le mouvement.
+    if (brk > 0 && eFocus > 0.001) {
+      const dBack =
+        (tmp.camGoal.x - tmp.fill.x) * SCREEN.tangent.x +
+        (tmp.camGoal.z - tmp.fill.z) * SCREEN.tangent.z
+      if (dBack < 0) tmp.camGoal.copy(tmp.fill)
+    }
     // SORTIE : 3 poses (A=croisière vivante → B=lecture → C=lac) en 2 segments
     // lissés. L'ARRÊT de lecture = EXACTEMENT la pose B (exr = EXIT.read) ; plus de
     // lerp flou « 30 % du chemin ».
@@ -157,6 +174,13 @@ export function RubyRig({ curve, uRef, exitRef }) {
     const posTau = THREE.MathUtils.lerp(CAM.posTau, CAM.posLockTau, Math.max(eFocus, ex))
     if (firstFrame.current) camera.position.copy(tmp.camGoal)
     else damp3(camera.position, tmp.camGoal, posTau, delta)
+    // vitesse caméra (monde) : sert à compenser le retard du ressort du rubis (cf.
+    // plus bas). Bornée → un delta anormal (retour d'onglet) ne catapulte pas l'ancre.
+    if (firstFrame.current) tmp.camVel.set(0, 0, 0)
+    else tmp.camVel.copy(camera.position).sub(tmp.camPrev).divideScalar(Math.max(delta, 1e-4))
+    tmp.camPrev.copy(camera.position)
+    const vCam = tmp.camVel.length()
+    if (vCam > 60) tmp.camVel.multiplyScalar(60 / vCam)
 
     // ── 2) REGARD le long du tunnel (convergence CONTINUE — plus de bascule sèche) ──
     // point DEVANT sur la courbe, ramené à hauteur caméra → regard ~horizontal,
@@ -198,6 +222,13 @@ export function RubyRig({ curve, uRef, exitRef }) {
     // quand on commence à avancer (uRef → 0.1).
     const intro = smooth01(THREE.MathUtils.clamp(1 - uRef.current / 0.1, 0, 1))
     tmp.rubyGoal.copy(camera.position).addScaledVector(tmp.forward, CAM.rubyAhead)
+    // COMPENSATION DU RETARD DU RESSORT : à pleine vitesse (~30 u/s en croisière), le
+    // damp (rubyTau) faisait traîner le rubis de v·tau ≈ 5,5u derrière une ancre à
+    // seulement 7,5u de la caméra → quasi collé à l'objectif, le moindre écart angulaire
+    // explosait dans le cadre (balayage gauche-droite de ±19° mesuré au freinage du
+    // bout de grotte). En avançant l'ancre de v·tau, la position AMORTIE retombe pile
+    // à rubyAhead devant la caméra, à toute vitesse → le rubis reste centré (±2,5°).
+    tmp.rubyGoal.addScaledVector(tmp.camVel, CAM.rubyTau)
     // posé bas dans le cadre mais REMONTÉ au départ (ne touche pas la bulle « Suis-moi »),
     // puis redescend à sa hauteur de croisière quand on commence à avancer.
     tmp.rubyGoal.y += -CAM.rubyDrop + intro * 0.01 + Math.sin(e * 0.7) * 0.5 // posé bas + respiration

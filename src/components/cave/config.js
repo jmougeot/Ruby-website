@@ -66,29 +66,34 @@ export const U_END = 0.2475 // bout du tunnel (INCHANGÉ : tout l'après-vidéo 
 // SCROLL LIBRE (plus d'aimant qui confisque le geste) : la garantie que chaque
 // pose est VUE vient des PLATEAUX de la timeline — des plages de scroll entières
 // où la caméra reste figée sur la vidéo / les panneaux. Budget en ÉCRANS de scroll
-// (course totale = 11,8 écrans → Hero h-[1280vh] = course + 1 écran ; les deux
+// (course totale = 9,4 écrans → Hero h-[1040vh] = course + 1 écran ; les deux
 // DOIVENT être recalés ensemble) :
-//   approche 1,8 · pause vidéo 1,2 · croisière 3,7 (dont bris pendant les 0,9
+//   approche 1,8 · pause vidéo 0,5 · croisière 2,0 (dont bris pendant les 0,49
 //   premiers écrans : Ruby crève l'écran en repartant) · panneau 1 : 1,2 ·
 //   montée 0,7 · panneau 2 : 1,2 · émergence 0,5 · tampon lac 1,5
-// Principe : approche + croisière raccourcies (on les parcourt à la main désormais),
-// plateaux de lecture ÉLARGIS (≥ 1,2 écran). Le TAMPON du lac est LARGE exprès :
-// depuis le panneau 2, l'inertie d'un swipe (émergence 0,5 + tampon) meurt SUR le
-// lac au lieu de traverser vers les sections suivantes — c'est le swipe d'après
-// qui sort du hero.
-export const U_ARRIVE = 0.153 // fin du trajet : arrivé sur la vidéo
-export const U_HOLD = 0.254 // fin de la PAUSE (vidéo plein écran figée) → bris + reprise de la course
-export const U_BREAK = 0.331 // fin du BRIS (fragments 100 % dispersés) ; la course, elle, a repris dès U_HOLD
-export const S_CAVE_END = 0.568 // bout de la grotte : la croisière s'arrête, le 1er
+// Principe : les plateaux de LECTURE (panneaux) restent larges (≥ 1,2 écran) ; la
+// pause vidéo est COURTE (0,5) car on y arrive ASSISTÉ (snap « Suis-moi » + settle)
+// et on y stationne de toute façon pour regarder la vidéo — un plateau large ne
+// faisait qu'imposer ~2 swipes à vide pour repartir (vidéo → panneau 1 : 2,5 écrans
+// désormais, contre 4,9 avant). Le ratio bris/croisière (~24,5 %) est CONSERVÉ →
+// les fragments sont 100 % dispersés avant que la caméra n'atteigne le plan de
+// l'écran (garantie géométrique, cf. scrollChoreography). Le TAMPON du lac est
+// LARGE exprès : depuis le panneau 2, l'inertie d'un swipe (émergence 0,5 + tampon)
+// meurt SUR le lac au lieu de traverser vers les sections suivantes — c'est le
+// swipe d'après qui sort du hero.
+export const U_ARRIVE = 0.1915 // fin du trajet : arrivé sur la vidéo (1,8 écran)
+export const U_HOLD = 0.2447 // fin de la PAUSE (vidéo plein écran figée) → bris + reprise de la course
+export const U_BREAK = 0.2968 // fin du BRIS (fragments 100 % dispersés) ; la course, elle, a repris dès U_HOLD
+export const S_CAVE_END = 0.4574 // bout de la grotte : la croisière s'arrête, le 1er
 // message ("Ruby finds…") apparaît, caméra FIGÉE au bout de grotte (pose A).
 // PAUSE DE LECTURE du 1er message : entre S_CAVE_END et S_MSG_HOLD tout est figé
 // (uRef=U_END, exit=0) → on lit le 1er texte.
-export const S_MSG_HOLD = 0.669 // fin de la pause de lecture du 1er message
+export const S_MSG_HOLD = 0.5851 // fin de la pause de lecture du 1er message
 // SLIDE 3 : on remonte dans le puits jusqu'au 2e message (pose B).
 // SLIDE 4 : on repart et on émerge sur le lac (pose C).
-export const S_EXIT_RISE = 0.729 // fin de la montée → PLATEAU devant le 2e message
-export const S_EXIT_HOLD = 0.831 // fin du LARGE palier de lecture du 2e message
-export const S_EXIT_END = 0.873 // émergé sur le lac ; au-delà → PAUSE tampon (1,5 écran)
+export const S_EXIT_RISE = 0.6596 // fin de la montée → PLATEAU devant le 2e message
+export const S_EXIT_HOLD = 0.7872 // fin du LARGE palier de lecture du 2e message
+export const S_EXIT_END = 0.8404 // émergé sur le lac ; au-delà → PAUSE tampon (1,5 écran)
 export const EXIT_HOLD = 0.3 // niveau de remontée (exit) auquel on se bloque pendant le palier
 // (plus bas = on s'arrête plus tôt/plus bas dans le puits, devant le message)
 // (de S_EXIT_END à 1 : Ruby figé sur le lac → un scroll ne saute pas direct aux sections suivantes)
